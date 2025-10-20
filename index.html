@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tides Over Sand</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1 class="app-title">Tides Over Sand</h1>
+                    <p class="app-subtitle">Tasks fade like writing in sand</p>
+                </div>
+                <div class="auth-section">
+                    <div id="authStatus" class="auth-status" style="display: none;">
+                        <span id="userInfo" class="user-info"></span>
+                        <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
+                    </div>
+                    <button id="signInBtn" class="sign-in-btn">Sign in with GitHub</button>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="task-list-container">
+                <div class="task-list" id="taskList">
+                    <!-- Tasks will be dynamically added here -->
+                </div>
+                
+                <div class="add-task-container">
+                    <input type="text" id="newTaskInput" placeholder="Add a new task..." class="new-task-input">
+                    <button id="addTaskBtn" class="add-task-btn">Add</button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Task Detail Modal -->
+        <div class="modal-overlay" id="taskModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Task Details</h2>
+                    <button class="close-btn" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="task-title-section">
+                        <input type="text" id="modalTaskTitle" class="task-title-input" placeholder="Task title...">
+                    </div>
+                    
+                    <div class="task-body-section">
+                        <textarea id="modalTaskBody" class="task-body-textarea" placeholder="Add details... (Markdown supported)"></textarea>
+                        <div id="modalTaskBodyPreview" class="task-body-preview"></div>
+                    </div>
+                    
+                    <div class="task-meta-section">
+                        <div class="lifetime-info">
+                            <span class="lifetime-label">Lifetime:</span>
+                            <span id="lifetimeValue" class="lifetime-value"></span>
+                            <button id="renewTaskBtn" class="renew-btn" style="display: none;">Renew</button>
+                        </div>
+                        <div class="task-actions">
+                            <button id="saveTaskBtn" class="save-btn">Save</button>
+                            <button id="deleteTaskBtn" class="delete-btn">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

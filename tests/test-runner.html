@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tides Over Sand - Unit Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .pass { 
+            background: #d4edda; 
+            color: #155724; 
+            border-left-color: #28a745;
+        }
+        .fail { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border-left-color: #dc3545;
+        }
+        .pending { 
+            background: #fff3cd; 
+            color: #856404; 
+            border-left-color: #ffc107;
+        }
+        .test-summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .test-group {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .test-group h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .error-details {
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Tides Over Sand - Unit Test Suite</h1>
+    
+    <div class="test-container">
+        <h2>Test Runner</h2>
+        <p>This test suite validates all functionality of the Tides Over Sand application. Tests are designed to fail initially and should be made to pass through implementation.</p>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearResults()">Clear Results</button>
+        <button onclick="runSpecificGroup('core')">Run Core Tests</button>
+        <button onclick="runSpecificGroup('ui')">Run UI Tests</button>
+        <button onclick="runSpecificGroup('persistence')">Run Persistence Tests</button>
+    </div>
+    
+    <div id="testResults"></div>
+    
+    <script>
+        // Test framework
+        class TestFramework {
+            constructor() {
+                this.tests = [];
+                this.results = [];
+                this.currentGroup = null;
+            }
+            
+            describe(groupName, testFunction) {
+                this.currentGroup = groupName;
+                testFunction();
+                this.currentGroup = null;
+            }
+            
+            it(testName, testFunction) {
+                this.tests.push({
+                    group: this.currentGroup || 'default',
+                    name: testName,
+                    fn: testFunction
+                });
+            }
+            
+            expect(actual) {
+                return {
+                    toBe: (expected) => {
+                        if (actual !== expected) {
+                            throw new Error(`Expected ${expected}, but got ${actual}`);
+                        }
+                    },
+                    toEqual: (expected) => {
+                        if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                            throw new Error(`Expected ${JSON.stringify(expected)}, but got ${JSON.stringify(actual)}`);
+                        }
+                    },
+                    toBeTruthy: () => {
+                        if (!actual) {
+                            throw new Error(`Expected truthy value, but got ${actual}`);
+                        }
+                    },
+                    toBeFalsy: () => {
+                        if (actual) {
+                            throw new Error(`Expected falsy value, but got ${actual}`);
+                        }
+                    },
+                    toContain: (expected) => {
+                        if (!actual.includes(expected)) {
+                            throw new Error(`Expected ${actual} to contain ${expected}`);
+                        }
+                    },
+                    toThrow: () => {
+                        try {
+                            actual();
+                            throw new Error('Expected function to throw, but it did not');
+                        } catch (e) {
+                            // Expected behavior
+                        }
+                    }
+                };
+            }
+            
+            async runTests(groupFilter = null) {
+                this.results = [];
+                const testsToRun = groupFilter ? 
+                    this.tests.filter(t => t.group === groupFilter) : 
+                    this.tests;
+                
+                for (const test of testsToRun) {
+                    try {
+                        await test.fn();
+                        this.results.push({
+                            group: test.group,
+                            name: test.name,
+                            status: 'pass',
+                            error: null
+                        });
+                    } catch (error) {
+                        this.results.push({
+                            group: test.group,
+                            name: test.name,
+                            status: 'fail',
+                            error: error.message
+                        });
+                    }
+                }
+                
+                this.renderResults();
+            }
+            
+            renderResults() {
+                const container = document.getElementById('testResults');
+                container.innerHTML = '';
+                
+                // Summary
+                const passed = this.results.filter(r => r.status === 'pass').length;
+                const failed = this.results.filter(r => r.status === 'fail').length;
+                const total = this.results.length;
+                
+                const summary = document.createElement('div');
+                summary.className = 'test-summary';
+                summary.innerHTML = `
+                    <h3>Test Results Summary</h3>
+                    <p>Total: ${total} | Passed: ${passed} | Failed: ${failed}</p>
+                    <p>Success Rate: ${total > 0 ? Math.round((passed / total) * 100) : 0}%</p>
+                `;
+                container.appendChild(summary);
+                
+                // Group results
+                const groups = [...new Set(this.results.map(r => r.group))];
+                groups.forEach(group => {
+                    const groupResults = this.results.filter(r => r.group === group);
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'test-group';
+                    
+                    const groupPassed = groupResults.filter(r => r.status === 'pass').length;
+                    const groupTotal = groupResults.length;
+                    
+                    groupDiv.innerHTML = `
+                        <h3>${group} (${groupPassed}/${groupTotal})</h3>
+                        <div id="group-${group}"></div>
+                    `;
+                    container.appendChild(groupDiv);
+                    
+                    const groupContainer = document.getElementById(`group-${group}`);
+                    groupResults.forEach(result => {
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = `test-result ${result.status}`;
+                        resultDiv.innerHTML = `
+                            <strong>${result.name}:</strong> ${result.status.toUpperCase()}
+                            ${result.error ? `<div class="error-details">${result.error}</div>` : ''}
+                        `;
+                        groupContainer.appendChild(resultDiv);
+                    });
+                });
+            }
+        }
+        
+        // Initialize test framework
+        const test = new TestFramework();
+        
+        // Core functionality tests
+        test.describe('core', () => {
+            test.it('should initialize app with empty task list', () => {
+                // This will fail initially - app doesn't exist
+                test.expect(window.app).toBeTruthy();
+                test.expect(window.app.tasks).toEqual([]);
+            });
+            
+            test.it('should generate unique user ID', () => {
+                // This will fail initially - app doesn't exist
+                test.expect(window.app.userId).toBeTruthy();
+                test.expect(window.app.userId).toContain('user_');
+            });
+            
+            test.it('should add new task', () => {
+                // This will fail initially - app doesn't exist
+                const initialCount = window.app.tasks.length;
+                window.app.addTask();
+                test.expect(window.app.tasks.length).toBe(initialCount + 1);
+            });
+            
+            test.it('should calculate task lifetime correctly', () => {
+                // This will fail initially - app doesn't exist
+                const task = {
+                    renewedAt: new Date().toISOString()
+                };
+                const lifetime = window.app.getTaskLifetime(task);
+                test.expect(lifetime).toBe(5);
+            });
+            
+            test.it('should handle task expiration', () => {
+                // This will fail initially - app doesn't exist
+                const oldTask = {
+                    renewedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+                };
+                const lifetime = window.app.getTaskLifetime(oldTask);
+                test.expect(lifetime).toBe(0);
+            });
+        });
+        
+        // UI tests
+        test.describe('ui', () => {
+            test.it('should render task list', () => {
+                // This will fail initially - elements don't exist
+                const taskList = document.getElementById('taskList');
+                test.expect(taskList).toBeTruthy();
+            });
+            
+            test.it('should show add task input', () => {
+                // This will fail initially - elements don't exist
+                const input = document.getElementById('newTaskInput');
+                test.expect(input).toBeTruthy();
+            });
+            
+            test.it('should show add task button', () => {
+                // This will fail initially - elements don't exist
+                const button = document.getElementById('addTaskBtn');
+                test.expect(button).toBeTruthy();
+            });
+            
+            test.it('should show task modal', () => {
+                // This will fail initially - elements don't exist
+                const modal = document.getElementById('taskModal');
+                test.expect(modal).toBeTruthy();
+            });
+            
+            test.it('should handle task completion toggle', () => {
+                // This will fail initially - app doesn't exist
+                const task = { id: 'test', completed: false };
+                window.app.toggleTaskCompletion('test');
+                // This test will need proper setup
+            });
+        });
+        
+        // Persistence tests
+        test.describe('persistence', () => {
+            test.it('should save tasks to localStorage', () => {
+                // This will fail initially - app doesn't exist
+                window.app.tasks = [{ id: 'test', title: 'Test Task' }];
+                window.app.saveTasks();
+                const saved = localStorage.getItem(window.app.storageKey);
+                test.expect(saved).toBeTruthy();
+            });
+            
+            test.it('should load tasks from localStorage', () => {
+                // This will fail initially - app doesn't exist
+                const testTasks = [{ id: 'test', title: 'Test Task' }];
+                localStorage.setItem('test-key', JSON.stringify(testTasks));
+                window.app.storageKey = 'test-key';
+                window.app.loadTasks();
+                test.expect(window.app.tasks).toEqual(testTasks);
+            });
+            
+            test.it('should handle corrupted localStorage data', () => {
+                // This will fail initially - app doesn't exist
+                localStorage.setItem(window.app.storageKey, 'invalid-json');
+                window.app.loadTasks();
+                test.expect(window.app.tasks).toEqual([]);
+            });
+        });
+        
+        // Markdown tests
+        test.describe('markdown', () => {
+            test.it('should parse markdown headers', () => {
+                // This will fail initially - app doesn't exist
+                const result = window.app.parseMarkdown('# Header');
+                test.expect(result).toContain('<h1>Header</h1>');
+            });
+            
+            test.it('should parse bold text', () => {
+                // This will fail initially - app doesn't exist
+                const result = window.app.parseMarkdown('**bold**');
+                test.expect(result).toContain('<strong>bold</strong>');
+            });
+            
+            test.it('should parse italic text', () => {
+                // This will fail initially - app doesn't exist
+                const result = window.app.parseMarkdown('*italic*');
+                test.expect(result).toContain('<em>italic</em>');
+            });
+        });
+        
+        // Drag and drop tests
+        test.describe('dragdrop', () => {
+            test.it('should handle task reordering', () => {
+                // This will fail initially - app doesn't exist
+                window.app.tasks = [
+                    { id: 'task1', renewedAt: new Date().toISOString() },
+                    { id: 'task2', renewedAt: new Date().toISOString() }
+                ];
+                window.app.handleTaskReorder('task1', 'task2');
+                test.expect(window.app.tasks[0].id).toBe('task1');
+            });
+            
+            test.it('should update renewal dates on reorder', () => {
+                // This will fail initially - app doesn't exist
+                const task1 = { id: 'task1', renewedAt: new Date().toISOString() };
+                const task2 = { id: 'task2', renewedAt: new Date().toISOString() };
+                window.app.tasks = [task1, task2];
+                window.app.handleTaskReorder('task1', 'task2');
+                test.expect(task1.renewedAt).not.toBe(task2.renewedAt);
+            });
+        });
+        
+        // Test runner functions
+        function runAllTests() {
+            test.runTests();
+        }
+        
+        function runSpecificGroup(group) {
+            test.runTests(group);
+        }
+        
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                runAllTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
