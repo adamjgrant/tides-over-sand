@@ -66,19 +66,14 @@ class TidesOverSand {
         document.getElementById('signInBtn').addEventListener('click', () => this.signInWithGitHub());
         document.getElementById('signOutBtn').addEventListener('click', () => this.signOut());
         
-        // Modal events
-        document.getElementById('closeModal').addEventListener('click', () => this.closeModal());
-        document.getElementById('saveTaskBtn').addEventListener('click', () => this.saveTask());
-        document.getElementById('deleteTaskBtn').addEventListener('click', () => this.deleteTask());
-        document.getElementById('renewTaskBtn').addEventListener('click', () => this.renewTask());
-        
-        // Close modal on overlay click
-        document.getElementById('taskModal').addEventListener('click', (e) => {
-            if (e.target.id === 'taskModal') this.closeModal();
-        });
+        // Detail panel events
+        document.getElementById('closeDetailPanel').addEventListener('click', () => this.closeDetailPanel());
+        document.getElementById('detailSaveTaskBtn').addEventListener('click', () => this.saveTask());
+        document.getElementById('detailDeleteTaskBtn').addEventListener('click', () => this.deleteTask());
+        document.getElementById('detailRenewTaskBtn').addEventListener('click', () => this.renewTask());
         
         // Task body preview toggle
-        document.getElementById('modalTaskBody').addEventListener('input', () => this.updatePreview());
+        document.getElementById('detailTaskBody').addEventListener('input', () => this.updatePreview());
         
         // Drag and drop
         this.setupDragAndDrop();
@@ -178,7 +173,7 @@ class TidesOverSand {
     
     openTaskDetail(taskId) {
         if (!this.user) {
-            alert('Please sign in to view task details');
+            alert('Please sign in to view task details. We store your tasks in Supabase so you can access them from any computer by logging in with GitHub.');
             return;
         }
         
@@ -188,23 +183,23 @@ class TidesOverSand {
         this.currentTaskId = taskId;
         this.isEditing = true;
         
-        document.getElementById('modalTaskTitle').value = task.title;
-        document.getElementById('modalTaskBody').value = task.body || '';
+        document.getElementById('detailTaskTitle').value = task.title;
+        document.getElementById('detailTaskBody').value = task.body || '';
         this.updatePreview();
         
         // Update lifetime display
         this.updateLifetimeDisplay(task);
         
         // Show/hide renew button
-        const renewBtn = document.getElementById('renewTaskBtn');
+        const renewBtn = document.getElementById('detailRenewTaskBtn');
         const canRenew = this.canRenewTask(task);
         renewBtn.style.display = canRenew ? 'inline-block' : 'none';
         
-        document.getElementById('taskModal').classList.add('active');
+        document.getElementById('taskDetailPanel').classList.add('active');
     }
     
-    closeModal() {
-        document.getElementById('taskModal').classList.remove('active');
+    closeDetailPanel() {
+        document.getElementById('taskDetailPanel').classList.remove('active');
         this.currentTaskId = null;
         this.isEditing = false;
     }
@@ -215,8 +210,8 @@ class TidesOverSand {
         const task = this.tasks.find(t => t.id === this.currentTaskId);
         if (!task) return;
         
-        const newTitle = document.getElementById('modalTaskTitle').value.trim();
-        const newBody = document.getElementById('modalTaskBody').value;
+        const newTitle = document.getElementById('detailTaskTitle').value.trim();
+        const newBody = document.getElementById('detailTaskBody').value;
         
         if (!newTitle) {
             alert('Task title cannot be empty');
@@ -240,7 +235,7 @@ class TidesOverSand {
             
             this.saveTasksToLocal();
             this.renderTasks();
-            this.closeModal();
+            this.closeDetailPanel();
         } catch (error) {
             console.error('Error saving task:', error);
             alert('Failed to save task. Please try again.');
@@ -315,7 +310,7 @@ class TidesOverSand {
             
             this.saveTasksToLocal();
             this.renderTasks();
-            this.closeModal();
+            this.closeDetailPanel();
         } catch (error) {
             console.error('Error renewing task:', error);
             alert('Failed to renew task. Please try again.');
@@ -335,6 +330,11 @@ class TidesOverSand {
         
         if (task.completed) {
             // Check if within 1 minute of completion
+            if (!task.completed_at) {
+                alert('Cannot uncomplete task - no completion time recorded');
+                return;
+            }
+            
             const completedAt = new Date(task.completed_at);
             const now = new Date();
             const timeDiff = now - completedAt;
@@ -376,16 +376,16 @@ class TidesOverSand {
         const now = new Date();
         const diffTime = now - renewedAt;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        return Math.max(0, 5 - diffDays);
+        return Math.min(4, diffDays); // 0d to 4d (5d = deleted)
     }
     
     getTaskFadeClass(task) {
         const lifetime = this.getTaskLifetime(task);
-        if (lifetime <= 1) return 'fade-4';
-        if (lifetime <= 2) return 'fade-3';
-        if (lifetime <= 3) return 'fade-2';
-        if (lifetime <= 4) return 'fade-1';
-        return '';
+        if (lifetime >= 4) return 'fade-4'; // 4d = faintest but readable
+        if (lifetime >= 3) return 'fade-3';
+        if (lifetime >= 2) return 'fade-2';
+        if (lifetime >= 1) return 'fade-1';
+        return ''; // 0d = full opacity
     }
     
     getLifetimeBadgeClass(task) {
@@ -397,14 +397,14 @@ class TidesOverSand {
     
     updateLifetimeDisplay(task) {
         const lifetime = this.getTaskLifetime(task);
-        const lifetimeElement = document.getElementById('lifetimeValue');
+        const lifetimeElement = document.getElementById('detailLifetimeValue');
         lifetimeElement.textContent = `${lifetime}d`;
         lifetimeElement.className = `lifetime-value ${this.getLifetimeBadgeClass(task)}`;
     }
     
     updatePreview() {
-        const body = document.getElementById('modalTaskBody').value;
-        const preview = document.getElementById('modalTaskBodyPreview');
+        const body = document.getElementById('detailTaskBody').value;
+        const preview = document.getElementById('detailTaskBodyPreview');
         
         if (body.trim()) {
             preview.innerHTML = this.parseMarkdown(body);
@@ -581,6 +581,23 @@ class TidesOverSand {
         this.renderTasks();
     }
     
+    async deleteExpiredTasks(expiredTasks) {
+        try {
+            const taskIds = expiredTasks.map(task => task.id);
+            const { error } = await this.supabase
+                .from('tasks')
+                .delete()
+                .in('id', taskIds)
+                .eq('user_id', this.user.id);
+            
+            if (error) {
+                console.error('Error deleting expired tasks:', error);
+            }
+        } catch (error) {
+            console.error('Error deleting expired tasks:', error);
+        }
+    }
+    
     renderTasks() {
         const taskList = document.getElementById('taskList');
         
@@ -589,18 +606,26 @@ class TidesOverSand {
             new Date(b.renewed_at) - new Date(a.renewed_at)
         );
         
-        // Remove expired tasks
+        // Remove expired tasks (5d+ old)
         const validTasks = sortedTasks.filter(task => {
             const lifetime = this.getTaskLifetime(task);
-            return lifetime > 0;
+            return lifetime <= 4; // Keep 0d to 4d, delete 5d+
         });
         
         // Update tasks array if any were removed
         if (validTasks.length !== this.tasks.length) {
+            const expiredTasks = this.tasks.filter(task => {
+                const lifetime = this.getTaskLifetime(task);
+                return lifetime > 4; // 5d+ old
+            });
+            
             this.tasks = validTasks;
             this.saveTasksToLocal();
-            // Note: We don't delete from database here to avoid race conditions
-            // Expired tasks will be filtered out on next load
+            
+            // Delete expired tasks from Supabase
+            if (expiredTasks.length > 0 && this.user) {
+                this.deleteExpiredTasks(expiredTasks);
+            }
         }
         
         if (!this.user) {
@@ -624,9 +649,8 @@ class TidesOverSand {
         }
         
         taskList.innerHTML = validTasks.map(task => {
-            const lifetime = this.getTaskLifetime(task);
-            const fadeClass = this.getTaskFadeClass(task);
-            const badgeClass = this.getLifetimeBadgeClass(task);
+            // Only apply fade class to non-completed tasks
+            const fadeClass = task.completed ? '' : this.getTaskFadeClass(task);
             
             return `
                 <div class="task-item ${fadeClass} ${task.completed ? 'completed' : ''}" 
@@ -636,10 +660,6 @@ class TidesOverSand {
                          onclick="event.stopPropagation(); app.toggleTaskCompletion('${task.id}')"></div>
                     <div class="task-content" onclick="app.openTaskDetail('${task.id}')">
                         <div class="task-title">${this.escapeHtml(task.title)}</div>
-                        <div class="task-meta">
-                            <span class="lifetime-badge ${badgeClass}">${lifetime}d</span>
-                            ${task.body ? '<span>• Has details</span>' : ''}
-                        </div>
                     </div>
                 </div>
             `;

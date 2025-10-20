@@ -7,11 +7,17 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
     - [x] Rejected: You created an md file with the test cases. You were supposed to actually make unit tests that can be run. They should all fail at the start so that we can continue with TBD tasks to pass them.
 - [x] See AGENTS.md to understand how the diagnosis folder should be used. It looks like you have files there that are meant to live on indefinitely.
 - [x] For data persistence, let's use Supabase as the BaaS. This will enable cross-device sync while working with GitHub Pages. Users will need to sign in with email/password or social auth.
-- [ ] The error message when someone tries to make a task without signing in is great, but we should briefly explain why, which is essentially that we store tasks in Supabase. Logging into github allows users to login and see their tasks from any computer.
-- [ ] Review PROJECT.md for requirements. Currently the task row shows UI for the lifetime but it shouldn't.
-- [ ] The moment a task is created, its lifetime should be 0d because that's how old it is. The oldest a task can be is 4d because at 5d, it is permanently deleted.
-    - [ ] Make sure this logic deletes it from supabase too.
-    - [ ] Currently, tasks start at 5d.
-- [ ] Let's make the header area much smaller. The title should be a smaller font but still heading-like. Let's also lose the subtitle.
-- [ ] Below the task UI, add a "What is this about?" section that explains the philosophy and how to use the app in three short paragraphs.
-- [ ] I want the tasks to open as a right side split next to the task list, not as a modal.
+- [x] The error message when someone tries to make a task without signing in is great, but we should briefly explain why, which is essentially that we store tasks in Supabase. Logging into github allows users to login and see their tasks from any computer.
+- [x] Review PROJECT.md for requirements. Currently the task row shows UI for the lifetime but it shouldn't.
+- [x] The moment a task is created, its lifetime should be 0d because that's how old it is. The oldest a task can be is 4d because at 5d, it is permanently deleted.
+    - [x] Make sure this logic deletes it from supabase too.
+    - [x] Currently, tasks start at 5d.
+- [x] Let's make the header area much smaller. The title should be a smaller font but still heading-like. Let's also lose the subtitle.
+- [x] Below the task UI, add a "What is this about?" section that explains the philosophy and how to use the app in three short paragraphs.
+- [x] I want the tasks to open as a right side split next to the task list, not as a modal.
+- [x] I can currently un-complete a completed task that was completed more than a minute ago. Review PROJECT.md for requirements.
+- [x] Language change: "Like sand that holds writing well when wet but fades as it dries" should be "Like sand that holds writing well but gradually fades away with the tides"
+- [x] Language change: "your tasks naturally disappear after 5 days unless you actively renew them" should be "your tasks will fade each day until they naturally disappear after 5 days unless you actively renew them"
+- [x] When tasks are marked completed, they also fade to a lighter color, but we should reserve lighter color fading for renewal date aging. The only visual change from a completed task should be the strikethrough and the box being checked.
+- [ ] In the task detail, let's provide an option to just straight up delete the task.
+- [ ] Don't add a background for the what is this about section.

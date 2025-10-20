@@ -16,7 +16,6 @@
             <div class="header-content">
                 <div class="header-text">
                     <h1 class="app-title">Tides Over Sand</h1>
-                    <p class="app-subtitle">Tasks fade like writing in sand</p>
                 </div>
                 <div class="auth-section">
                     <div id="authStatus" class="auth-status" style="display: none;">
@@ -29,49 +28,59 @@
         </header>
         
         <main class="main-content">
-            <div class="task-list-container">
-                <div class="task-list" id="taskList">
-                    <!-- Tasks will be dynamically added here -->
+            <div class="content-split">
+                <div class="task-list-container">
+                    <div class="task-list" id="taskList">
+                        <!-- Tasks will be dynamically added here -->
+                    </div>
+                    
+                    <div class="add-task-container">
+                        <input type="text" id="newTaskInput" placeholder="Add a new task..." class="new-task-input">
+                        <button id="addTaskBtn" class="add-task-btn">Add</button>
+                    </div>
                 </div>
                 
-                <div class="add-task-container">
-                    <input type="text" id="newTaskInput" placeholder="Add a new task..." class="new-task-input">
-                    <button id="addTaskBtn" class="add-task-btn">Add</button>
+                <div class="task-detail-panel" id="taskDetailPanel">
+                    <div class="task-detail-content">
+                        <div class="task-detail-header">
+                            <h2 id="detailTitle">Task Details</h2>
+                            <button class="close-detail-btn" id="closeDetailPanel">&times;</button>
+                        </div>
+                        <div class="task-detail-body">
+                            <div class="task-title-section">
+                                <input type="text" id="detailTaskTitle" class="task-title-input" placeholder="Task title...">
+                            </div>
+                            
+                            <div class="task-body-section">
+                                <textarea id="detailTaskBody" class="task-body-textarea" placeholder="Add details... (Markdown supported)"></textarea>
+                                <div id="detailTaskBodyPreview" class="task-body-preview"></div>
+                            </div>
+                            
+                            <div class="task-meta-section">
+                                <div class="lifetime-info">
+                                    <span class="lifetime-label">Lifetime:</span>
+                                    <span id="detailLifetimeValue" class="lifetime-value"></span>
+                                    <button id="detailRenewTaskBtn" class="renew-btn" style="display: none;">Renew</button>
+                                </div>
+                                <div class="task-actions">
+                                    <button id="detailSaveTaskBtn" class="save-btn">Save</button>
+                                    <button id="detailDeleteTaskBtn" class="delete-btn">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            
+            <div class="philosophy-section">
+                <h3>What is this about?</h3>
+                <p>Traditional to-do lists often become overwhelming maintenance burdens that drain productivity instead of enhancing it. When capturing tasks outpaces our ability to complete them, we find ourselves in a death grip with our own lists, constantly maintaining them instead of focusing on what truly matters.</p>
+                
+                <p>This app explores a different approach inspired by writing in sand on a beach. Like sand that holds writing well but gradually fades away with the tides, your tasks will fade each day until they naturally disappear after 5 days unless you actively renew them. This encourages you to focus on what's truly important while remaining flexible to changing priorities.</p>
+                
+                <p>Simply drag tasks above others to renew them, or let them fade away naturally. The goal is to work more organically—staying in touch with your environment and what matters moment to moment, rather than being bound to arbitrary priorities from the past.</p>
             </div>
         </main>
-        
-        <!-- Task Detail Modal -->
-        <div class="modal-overlay" id="taskModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modalTitle">Task Details</h2>
-                    <button class="close-btn" id="closeModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="task-title-section">
-                        <input type="text" id="modalTaskTitle" class="task-title-input" placeholder="Task title...">
-                    </div>
-                    
-                    <div class="task-body-section">
-                        <textarea id="modalTaskBody" class="task-body-textarea" placeholder="Add details... (Markdown supported)"></textarea>
-                        <div id="modalTaskBodyPreview" class="task-body-preview"></div>
-                    </div>
-                    
-                    <div class="task-meta-section">
-                        <div class="lifetime-info">
-                            <span class="lifetime-label">Lifetime:</span>
-                            <span id="lifetimeValue" class="lifetime-value"></span>
-                            <button id="renewTaskBtn" class="renew-btn" style="display: none;">Renew</button>
-                        </div>
-                        <div class="task-actions">
-                            <button id="saveTaskBtn" class="save-btn">Save</button>
-                            <button id="deleteTaskBtn" class="delete-btn">Delete</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     
     <script src="app.js"></script>
