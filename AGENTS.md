@@ -1,0 +1,5 @@
+- Agent owns the README.md file.
+- Human owns the TASKS.md file but the agent is allowed to mark or unmark items as complete.
+- Human owns the PROJECT.md file. Agent can refer to this read-only for project requirements.
+- At the beginning of any task, refer to tasks.md unless otherwise noted.
+- Agent owns the diagnosis folder and may freely create and execute scripts there to verify the code it has written works. This should not replace the creation of unit tests. It is meant for one-off debugging and validation. Files in diagnosis are ephemeral.
