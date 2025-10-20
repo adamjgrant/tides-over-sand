@@ -135,7 +135,7 @@ class TidesOverSand {
     
     async addTask() {
         if (!this.user) {
-            alert('Please sign in to add tasks');
+            alert('Please sign in to add tasks. We store your tasks in Supabase so you can access them from any computer by logging in with GitHub.');
             return;
         }
         

@@ -8,3 +8,10 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] See AGENTS.md to understand how the diagnosis folder should be used. It looks like you have files there that are meant to live on indefinitely.
 - [x] For data persistence, let's use Supabase as the BaaS. This will enable cross-device sync while working with GitHub Pages. Users will need to sign in with email/password or social auth.
 - [ ] The error message when someone tries to make a task without signing in is great, but we should briefly explain why, which is essentially that we store tasks in Supabase. Logging into github allows users to login and see their tasks from any computer.
+- [ ] Review PROJECT.md for requirements. Currently the task row shows UI for the lifetime but it shouldn't.
+- [ ] The moment a task is created, its lifetime should be 0d because that's how old it is. The oldest a task can be is 4d because at 5d, it is permanently deleted.
+    - [ ] Make sure this logic deletes it from supabase too.
+    - [ ] Currently, tasks start at 5d.
+- [ ] Let's make the header area much smaller. The title should be a smaller font but still heading-like. Let's also lose the subtitle.
+- [ ] Below the task UI, add a "What is this about?" section that explains the philosophy and how to use the app in three short paragraphs.
+- [ ] I want the tasks to open as a right side split next to the task list, not as a modal.
