@@ -43,7 +43,6 @@
                 <div class="task-detail-panel" id="taskDetailPanel">
                     <div class="task-detail-content">
                         <div class="task-detail-header">
-                            <h2 id="detailTitle">Task Details</h2>
                             <button class="close-detail-btn" id="closeDetailPanel">&times;</button>
                         </div>
                         <div class="task-detail-body">
@@ -52,18 +51,17 @@
                             </div>
                             
                             <div class="task-body-section">
-                                <textarea id="detailTaskBody" class="task-body-textarea" placeholder="Add details... (Markdown supported)"></textarea>
-                                <div id="detailTaskBodyPreview" class="task-body-preview"></div>
+                                <div id="detailTaskBodyPreview" class="task-body-preview active" onclick="app.focusTextarea()"></div>
+                                <textarea id="detailTaskBody" class="task-body-textarea" placeholder="Add details... (Markdown supported)" onblur="app.blurTextarea()"></textarea>
                             </div>
                             
                             <div class="task-meta-section">
-                                <div class="lifetime-info">
-                                    <span class="lifetime-label">Lifetime:</span>
-                                    <span id="detailLifetimeValue" class="lifetime-value"></span>
-                                    <button id="detailRenewTaskBtn" class="renew-btn" style="display: none;">Renew</button>
-                                </div>
-                                <div class="task-actions">
-                                    <button id="detailSaveTaskBtn" class="save-btn">Save</button>
+                                <div class="lifetime-footer">
+                                    <div class="lifetime-info">
+                                        <span class="lifetime-label">Lifetime:</span>
+                                        <span id="detailLifetimeValue" class="lifetime-value"></span>
+                                        <button id="detailRenewTaskBtn" class="renew-btn" style="display: none;">Renew</button>
+                                    </div>
                                     <button id="detailDeleteTaskBtn" class="delete-btn">Delete</button>
                                 </div>
                             </div>

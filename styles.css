@@ -96,27 +96,33 @@ body {
 /* Content Split Layout */
 .content-split {
     display: flex;
-    gap: 2rem;
-    align-items: flex-start;
-}
-
-.task-list-container {
+    align-items: stretch;
     background: white;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    min-height: 600px;
+}
+
+.task-list-container {
     flex: 1;
     min-width: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
 }
 
 .task-detail-panel {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
     width: 400px;
-    min-height: 500px;
     display: none;
     flex-shrink: 0;
+    border-left: 1px solid #f0f0f0;
+    flex-direction: column;
 }
 
 .task-detail-panel.active {
@@ -160,12 +166,13 @@ body {
 }
 
 .task-detail-body {
-    padding: 2rem;
+    padding: 0;
     flex: 1;
     overflow-y: auto;
 }
 
 .task-list {
+    flex: 1;
     min-height: 200px;
 }
 
@@ -189,12 +196,17 @@ body {
 }
 
 .task-item.completed {
-    opacity: 0.6;
+    /* No opacity change - only strikethrough and checkbox */
+}
+
+.task-item.selected {
+    background: #f0f8ff;
+    border-left: 3px solid #3498db;
 }
 
 .task-item.completed .task-title {
     text-decoration: line-through;
-    color: #95a5a6;
+    color: #2c3e50;
 }
 
 .task-checkbox {
@@ -225,6 +237,18 @@ body {
     content: '✓';
     font-size: 12px;
     font-weight: bold;
+}
+
+.task-checkbox-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #95a5a6;
+    font-size: 14px;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
 .task-content {
@@ -382,15 +406,14 @@ body {
 .task-title-input {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    border: none;
     font-size: 1.1rem;
     font-weight: 500;
+    background: transparent;
 }
 
 .task-title-input:focus {
     outline: none;
-    border-color: #3498db;
 }
 
 .task-body-section {
@@ -401,28 +424,39 @@ body {
     width: 100%;
     min-height: 120px;
     padding: 1rem;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    border: none;
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
     resize: vertical;
+    background: transparent;
 }
 
 .task-body-textarea:focus {
     outline: none;
-    border-color: #3498db;
 }
 
 .task-body-preview {
-    margin-top: 1rem;
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 8px;
     min-height: 60px;
-    display: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.task-body-preview:hover {
+    background: #e9ecef;
 }
 
 .task-body-preview.active {
+    display: block;
+}
+
+.task-body-textarea {
+    display: none;
+}
+
+.task-body-textarea.active {
     display: block;
 }
 
@@ -449,6 +483,16 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+}
+
+.lifetime-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
 }
 
 .lifetime-info {
@@ -567,10 +611,7 @@ body {
 
 /* Philosophy Section */
 .philosophy-section {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
+    padding: 2rem 0;
     margin-top: 2rem;
 }
 

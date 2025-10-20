@@ -16,8 +16,43 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] Below the task UI, add a "What is this about?" section that explains the philosophy and how to use the app in three short paragraphs.
 - [x] I want the tasks to open as a right side split next to the task list, not as a modal.
 - [x] I can currently un-complete a completed task that was completed more than a minute ago. Review PROJECT.md for requirements.
+    - [x] Rejected: The business logic is correct now, but it shows an error alert. Instead it should just be implicit. For these kinds of rows, we should just replace the checkbox element with an icon of a checkbox.
+    - [ ] Rejected: The aforementioned change should only apply to completed tasks. Currently it applies to incomplete tasks too.
 - [x] Language change: "Like sand that holds writing well when wet but fades as it dries" should be "Like sand that holds writing well but gradually fades away with the tides"
 - [x] Language change: "your tasks naturally disappear after 5 days unless you actively renew them" should be "your tasks will fade each day until they naturally disappear after 5 days unless you actively renew them"
 - [x] When tasks are marked completed, they also fade to a lighter color, but we should reserve lighter color fading for renewal date aging. The only visual change from a completed task should be the strikethrough and the box being checked.
-- [ ] In the task detail, let's provide an option to just straight up delete the task.
-- [ ] Don't add a background for the what is this about section.
+    - [x] Rejected: Completed tasks still appear faded out.
+    - [x] Rejected: Still not fixed. Look at how this code is still there.
+
+    ```
+    .task-item.completed .task-title {
+        text-decoration: line-through;
+        color: #95a5a6;
+    }
+
+    .task-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    ```
+- [x] In the task detail, let's provide an option to just straight up delete the task.
+- [x] Don't add a background for the what is this about section.
+- [x] I removed the padding from .task-detail-body because I want the fields to use their own padding. So take away the fields' borders then put the lifetime UI in its own element that has its own padding.
+- [x] Task detail has a save button, but I want to remove that and make saving to be implicit. Use a debouncing function to save as the user types.
+- [x] When task detail is open, the task list and the task detail appear as two rounded rectangles with a space between them. I want them to work together as one rounded rectangle with no space between.
+- [x] The lifetime footer looks great, but let's include the delete button in it and make that footer span with width of the task detail.
+- [x] When the task detail is open, we have visually a parent rounded rectangle that takes on the height of either the task list or the task detail, whichever is bigger. When the task detail is taller, the "add new task" footer does not float to the bottom visually. Same thing with the lifetime footer in the detail view. So we should maybe use flexbox or similar to make sure both vertically take up max parent container height and make sure those elements are docked to the bottom.
+    - [ ] Rejected: The delete button is now in the element containing the lifteime UI. That's good. But the delete button and renew button are styled differently. They should both be monotone and same font size etc. They should also have a little margin between them.
+    - [ ] Rejected: The element containing the lifetime UI and delete button is not docked to the bottom nor does it span horizontally the task detail.
+- [x] We don't need the "Task Details" heading on the task detail. It's implicit.
+    - [ ] Rejected: This heading is gone, but the bulky container using it is still there. Remove it entirely and let the "x" to close just float somewhere in the top right corner.
+- [x] When task detail is open, we should visually denote in the list view which item we're showing detail on. Pick a subtle design way to do this.
+- [x] When editing the body of the task, we have a separate element below it showing the markdown preview. It should only show one or the other. So by default it shows the preview, then when a user clicks on the preview, they are focused on the textarea to edit it. Similarly, when they unfocus, it reverts to the preview.
+    - [ ] Rejected: Correct that the preview is only visible at first, but when I click, I should see the textarea *and not* the preview. So I either see the editor (if I'm clicked into it) or the preview (if I'm not), never both. 
+      - [ ] If there is no description, I should also see the same placeholder text from the textarea on the preview, but only if the textarea's contents are actually blank.
+- [ ] The cursor for task row items and buttons should be a pointer.
+- [ ] Instead of confirming to delete, we should visually show it as deleted and show some small UI up at the top saying it's deleted but allowing the user to click "undo." This will be possible for 5 seconds before the notification goes away and the item is actually deleted both visually and in supabase.
+- [ ] If I click the renew button in the task detail, the task detail is closed. It should remain open
+- [ ] If the lifetime is 0d, don't show the renew button.

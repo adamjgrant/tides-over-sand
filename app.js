@@ -68,12 +68,16 @@ class TidesOverSand {
         
         // Detail panel events
         document.getElementById('closeDetailPanel').addEventListener('click', () => this.closeDetailPanel());
-        document.getElementById('detailSaveTaskBtn').addEventListener('click', () => this.saveTask());
         document.getElementById('detailDeleteTaskBtn').addEventListener('click', () => this.deleteTask());
         document.getElementById('detailRenewTaskBtn').addEventListener('click', () => this.renewTask());
         
-        // Task body preview toggle
-        document.getElementById('detailTaskBody').addEventListener('input', () => this.updatePreview());
+        // Auto-save with debouncing
+        this.saveTimeout = null;
+        document.getElementById('detailTaskTitle').addEventListener('input', () => this.debouncedSave());
+        document.getElementById('detailTaskBody').addEventListener('input', () => {
+            this.updatePreview();
+            this.debouncedSave();
+        });
         
         // Drag and drop
         this.setupDragAndDrop();
@@ -187,6 +191,12 @@ class TidesOverSand {
         document.getElementById('detailTaskBody').value = task.body || '';
         this.updatePreview();
         
+        // Initialize the preview/textarea state
+        const preview = document.getElementById('detailTaskBodyPreview');
+        const textarea = document.getElementById('detailTaskBody');
+        preview.classList.add('active');
+        textarea.classList.remove('active');
+        
         // Update lifetime display
         this.updateLifetimeDisplay(task);
         
@@ -196,12 +206,47 @@ class TidesOverSand {
         renewBtn.style.display = canRenew ? 'inline-block' : 'none';
         
         document.getElementById('taskDetailPanel').classList.add('active');
+        
+        // Add selected class to the task in the list
+        this.updateSelectedTask(taskId);
     }
     
     closeDetailPanel() {
         document.getElementById('taskDetailPanel').classList.remove('active');
         this.currentTaskId = null;
         this.isEditing = false;
+        
+        // Remove selected class from all tasks
+        document.querySelectorAll('.task-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+    
+    updateSelectedTask(taskId) {
+        // Remove selected class from all tasks
+        document.querySelectorAll('.task-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Add selected class to current task
+        const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskElement) {
+            taskElement.classList.add('selected');
+        }
+    }
+    
+    debouncedSave() {
+        if (!this.user || !this.currentTaskId) return;
+        
+        // Clear existing timeout
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        
+        // Set new timeout for 1 second
+        this.saveTimeout = setTimeout(() => {
+            this.saveTask();
+        }, 1000);
     }
     
     async saveTask() {
@@ -235,7 +280,6 @@ class TidesOverSand {
             
             this.saveTasksToLocal();
             this.renderTasks();
-            this.closeDetailPanel();
         } catch (error) {
             console.error('Error saving task:', error);
             alert('Failed to save task. Please try again.');
@@ -258,7 +302,7 @@ class TidesOverSand {
                 this.tasks = this.tasks.filter(t => t.id !== this.currentTaskId);
                 this.saveTasksToLocal();
                 this.renderTasks();
-                this.closeModal();
+                this.closeDetailPanel();
             } catch (error) {
                 console.error('Error deleting task:', error);
                 alert('Failed to delete task. Please try again.');
@@ -408,10 +452,30 @@ class TidesOverSand {
         
         if (body.trim()) {
             preview.innerHTML = this.parseMarkdown(body);
-            preview.classList.add('active');
         } else {
-            preview.classList.remove('active');
+            preview.innerHTML = '<em>Click to add details...</em>';
         }
+    }
+    
+    focusTextarea() {
+        const preview = document.getElementById('detailTaskBodyPreview');
+        const textarea = document.getElementById('detailTaskBody');
+        
+        preview.classList.remove('active');
+        textarea.classList.add('active');
+        textarea.focus();
+    }
+    
+    blurTextarea() {
+        const preview = document.getElementById('detailTaskBodyPreview');
+        const textarea = document.getElementById('detailTaskBody');
+        
+        // Small delay to allow for any pending saves
+        setTimeout(() => {
+            preview.classList.add('active');
+            textarea.classList.remove('active');
+            this.updatePreview();
+        }, 100);
     }
     
     parseMarkdown(text) {
@@ -652,12 +716,20 @@ class TidesOverSand {
             // Only apply fade class to non-completed tasks
             const fadeClass = task.completed ? '' : this.getTaskFadeClass(task);
             
+            // Check if task can be uncompleted (within 1 minute)
+            const canUncomplete = task.completed && task.completed_at && 
+                (new Date() - new Date(task.completed_at)) <= 60000;
+            
+            const checkboxElement = canUncomplete ? 
+                `<div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                     onclick="event.stopPropagation(); app.toggleTaskCompletion('${task.id}')"></div>` :
+                `<div class="task-checkbox-icon">✓</div>`;
+            
             return `
                 <div class="task-item ${fadeClass} ${task.completed ? 'completed' : ''}" 
                      data-task-id="${task.id}" 
                      draggable="${!task.completed}">
-                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                         onclick="event.stopPropagation(); app.toggleTaskCompletion('${task.id}')"></div>
+                    ${checkboxElement}
                     <div class="task-content" onclick="app.openTaskDetail('${task.id}')">
                         <div class="task-title">${this.escapeHtml(task.title)}</div>
                     </div>
