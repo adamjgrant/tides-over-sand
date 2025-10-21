@@ -20,3 +20,5 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] The application works correctly when I login to github when running on localhost, but when I have it published to GH pages https://adamjgrant.github.io/tides-over-sand/ it redirects to a localhost address.
 - [x] If I delete a task, once it is deleted and goes away from the interface, automatically select the first item in the task list and show its detail if there are any tasks remaining.
 - [x] For the max-width 768px breakpoint, I want the task detail to open in a modal instead.
+- [x] Under the mobile breakpoint, the task list does not scroll.
+- [x] Under the mobile breakpoint, the add new task UI is overflowed out of view. It should be docked to the bottom.

@@ -702,6 +702,28 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
     .task-actions {
         justify-content: center;
     }
+    
+    /* Fix task list scrolling on mobile */
+    .task-list-container {
+        height: calc(100vh - 200px); /* Account for header and add task UI */
+        min-height: 300px;
+        max-height: calc(100vh - 200px);
+    }
+    
+    .task-list {
+        max-height: 100%;
+        overflow-y: auto;
+    }
+    
+    /* Fix add task UI positioning */
+    .add-task-container {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 1rem;
+        border-top: 1px solid #e0e0e0;
+        z-index: 10;
+    }
 }
 
 /* Delete Notification */
