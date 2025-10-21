@@ -753,6 +753,14 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
     margin-top: 2rem;
 }
 
+.philosophy-section .philosophy-title {
+  font-weight: normal;
+}
+
+.philosophy-section .philosophy-title strong {
+  font-weight: 600;
+}
+
 .philosophy-section h3 {
     font-size: 1.3rem;
     font-weight: 600;
