@@ -75,6 +75,18 @@ class TidesOverSand {
         document.getElementById('detailRenewTaskBtn').addEventListener('click', () => this.renewTask());
         document.getElementById('undoDeleteBtn').addEventListener('click', () => this.undoDelete());
         
+        // Close modal when clicking backdrop (mobile)
+        document.getElementById('taskDetailPanel').addEventListener('click', (e) => {
+            if (e.target.id === 'taskDetailPanel') {
+                this.closeDetailPanel();
+            }
+        });
+        
+        // Prevent modal content from closing when clicked
+        document.getElementById('taskDetailContent').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
         // Auto-save with debouncing
         this.saveTimeout = null;
         document.getElementById('detailTaskTitle').addEventListener('input', () => this.debouncedSave());
@@ -317,6 +329,12 @@ class TidesOverSand {
         this.saveTasksToLocal();
         this.renderTasks();
         this.closeDetailPanel();
+        
+        // Auto-select first remaining task if any exist
+        if (this.tasks.length > 0) {
+            const firstTask = this.tasks[0];
+            this.openTaskDetail(firstTask.id);
+        }
         
         // Show notification
         this.showDeleteNotification(taskId);
