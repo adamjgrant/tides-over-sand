@@ -504,6 +504,16 @@ body.appmode .app-mode-link-container {
     display: none;
 }
 
+/* Hide everything under .main-content except .content-split in app mode */
+body.appmode .main-content > *:not(.content-split) {
+    display: none;
+}
+
+/* Hide everything in .app except .main-content in app mode */
+body.appmode .app > *:not(.main-content) {
+    display: none;
+}
+
 body.appmode .content-split {
     position: fixed;
     top: 0;
@@ -531,6 +541,15 @@ body.appmode .app {
 
 body.appmode {
     background: white;
+    overflow: hidden; /* Prevent body scroll in app mode */
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for iOS */
+}
+
+html.appmode {
+    overflow: hidden; /* Prevent html scroll in app mode */
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for iOS */
 }
 
 /* Desktop App Mode - Responsive task list width when detail panel is open */

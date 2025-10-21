@@ -37,3 +37,5 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] There are way too many `!important;`s in the CSS. This points to bad programming. Please review.
 - [x] On mobile in appmode, The "Add new task" does not appear docked at the bottom. This might be because .task-list-container does not occupy the full vertical viewport either.
 - [x] If the page opens and we are in app mode, and we're not under the mobile breakpoint, autoselect the first task.
+- [x] When exiting app mode, it takes us to `/`. Instead let's have it redirect to whatever the current URL is minus url params.
+- [x] Right now we display none things when in app mode. Let's also display none anything in body div.app that is not main.main-content.

@@ -78,8 +78,9 @@ class TidesOverSand {
     }
     
     enableAppMode() {
-        // Add appmode class to body
+        // Add appmode class to body and html
         document.body.classList.add('appmode');
+        document.documentElement.classList.add('appmode');
         
         // Add title bar to task list container
         this.addAppModeTitleBar();
@@ -94,8 +95,9 @@ class TidesOverSand {
     }
     
     disableAppMode() {
-        // Remove appmode class from body
+        // Remove appmode class from body and html
         document.body.classList.remove('appmode');
+        document.documentElement.classList.remove('appmode');
         
         // Remove title bar if it exists
         const titleBar = document.getElementById('appModeTitleBar');
@@ -130,7 +132,10 @@ class TidesOverSand {
         // Add event listeners for buttons
         document.getElementById('appModeExitBtn').addEventListener('click', () => {
             this.disableAppMode();
-            window.location.href = '/';
+            // Redirect to current URL without appmode parameter
+            const url = new URL(window.location);
+            url.searchParams.delete('appmode');
+            window.location.href = url.toString();
         });
         document.getElementById('appModeSignOutBtn').addEventListener('click', () => this.signOut());
         
