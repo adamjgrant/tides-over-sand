@@ -190,9 +190,7 @@ body {
     border-bottom: none;
 }
 
-.task-item.completed {
-    /* No opacity change - only strikethrough and checkbox */
-}
+/* Completed tasks only show strikethrough and checkbox - no opacity change */
 
 .task-item.selected {
     background: #f0f8ff;
@@ -718,4 +716,23 @@ body {
 
 .empty-state p {
     font-size: 0.9rem;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer a {
+    color: #7f8c8d;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.footer a:hover {
+    color: #2c3e50;
 }

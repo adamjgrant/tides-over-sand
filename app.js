@@ -29,6 +29,7 @@ class TidesOverSand {
                 await this.loadTasks();
             } else {
                 this.showSignInUI();
+                this.renderTasks();
             }
             
             // Listen for auth changes
@@ -48,6 +49,7 @@ class TidesOverSand {
         } catch (error) {
             console.error('Failed to initialize Supabase:', error);
             this.showSignInUI();
+            this.renderTasks();
         }
     }
     
@@ -979,6 +981,56 @@ class TidesOverSand {
         }
     }
     
+    renderExampleTasks() {
+        const now = new Date();
+        const exampleTasks = [
+            { title: 'Fix toaster', completed: true, lifetime: 0 },
+            { title: 'Call Mom', completed: false, lifetime: 0 },
+            { title: 'Set up dentist appointment', completed: false, lifetime: 1 },
+            { title: 'Clean keyboard', completed: false, lifetime: 2 },
+            { title: 'Get vanity license plate', completed: false, lifetime: 3 },
+            { title: 'Air in tires', completed: true, lifetime: 4 },
+            { title: 'Organize toothbrushes', completed: false, lifetime: 4 },
+            { title: 'Clean up attic', completed: false, lifetime: 4 }
+        ];
+
+        // Convert to task objects with proper structure for existing functions
+        const taskObjects = exampleTasks.map((task, index) => {
+            const renewedAt = new Date(now.getTime() - (task.lifetime * 24 * 60 * 60 * 1000));
+            return {
+                id: `example_${index}`,
+                title: task.title,
+                completed: task.completed,
+                completed_at: task.completed ? new Date().toISOString() : null,
+                renewed_at: renewedAt.toISOString(),
+                sort_order: index
+            };
+        });
+
+        // Use the same rendering logic as real tasks
+        return taskObjects.map(task => {
+            // Apply fade class to all tasks based on their lifetime
+            const fadeClass = this.getTaskFadeClass(task);
+            
+            // For example tasks, always show icon for completed tasks (can't uncomplete)
+            let checkboxElement;
+            if (task.completed) {
+                checkboxElement = `<div class="task-checkbox-icon">✓</div>`;
+            } else {
+                checkboxElement = `<div class="task-checkbox"></div>`;
+            }
+            
+            return `
+                <div class="task-item ${fadeClass} ${task.completed ? 'completed' : ''}">
+                    ${checkboxElement}
+                    <div class="task-content">
+                        <div class="task-title">${this.escapeHtml(task.title)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     renderTasks() {
         const taskList = document.getElementById('taskList');
         
@@ -1023,12 +1075,7 @@ class TidesOverSand {
         }
         
         if (!this.user) {
-            taskList.innerHTML = `
-                <div class="empty-state">
-                    <h3>Sign in to get started</h3>
-                    <p>Sign in with GitHub to create and manage your tasks</p>
-                </div>
-            `;
+            taskList.innerHTML = this.renderExampleTasks();
             return;
         }
         
