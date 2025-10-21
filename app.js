@@ -170,7 +170,12 @@ class TidesOverSand {
             input.value = '';
             
             // Auto-select the new task and show detail view
-            this.showTaskDetail(data.id);
+            try {
+                this.showTaskDetail(data.id);
+            } catch (detailError) {
+                console.error('Error showing task detail:', detailError);
+                // Don't fail the entire operation if detail view fails
+            }
         } catch (error) {
             console.error('Error adding task:', error);
             alert('Failed to add task. Please try again.');

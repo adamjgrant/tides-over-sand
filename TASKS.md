@@ -78,3 +78,4 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] The debounce function to edit fields is a little slow. Can we tighten it?
 - [x] If I create a task, it should automatically select it and show in the detail view.
 - [x] If an item is completed, it should still get the faded effect we apply to tasks with a lifetime of 1, 2, 3, 4 etc days. Right now it's always unfaded.
+- [x] I tried adding the task "Move Fri support alignment?" but got an error message that it failed to add local task. But it successfully created it anyway.
