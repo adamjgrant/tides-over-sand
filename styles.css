@@ -615,8 +615,7 @@ html.appmode {
         left: 0;
         right: 0;
         background: white;
-        padding: 1rem;
-        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+        padding: 0;
         border-top: 1px solid #e0e0e0;
         z-index: 10;
         height: 80px; /* Fixed height for add task container */
