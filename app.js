@@ -15,6 +15,7 @@ class TidesOverSand {
         this.initializeApp();
         this.bindEvents();
         this.initializeSupabase();
+        this.initializeIcons();
     }
     
     async initializeSupabase() {
@@ -56,6 +57,63 @@ class TidesOverSand {
     initializeApp() {
         // No longer need URL-based user identification
         // Authentication will handle user identification
+        
+        // Check for appmode parameter
+        this.checkAppMode();
+    }
+    
+    checkAppMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const appMode = urlParams.get('appmode');
+        
+        if (appMode === '1') {
+            this.enableAppMode();
+        }
+    }
+    
+    enableAppMode() {
+        // Hide header and philosophy section
+        const header = document.querySelector('.header');
+        const philosophySection = document.querySelector('.philosophy-section');
+        const footer = document.querySelector('.footer');
+        
+        if (header) header.style.display = 'none';
+        if (philosophySection) philosophySection.style.display = 'none';
+        if (footer) footer.style.display = 'none';
+        
+        // Make content-split full screen
+        const contentSplit = document.querySelector('.content-split');
+        if (contentSplit) {
+            contentSplit.style.position = 'fixed';
+            contentSplit.style.top = '0';
+            contentSplit.style.left = '0';
+            contentSplit.style.right = '0';
+            contentSplit.style.bottom = '0';
+            contentSplit.style.width = '100vw';
+            contentSplit.style.height = '100vh';
+            contentSplit.style.maxHeight = '100vh';
+            contentSplit.style.borderRadius = '0';
+            contentSplit.style.boxShadow = 'none';
+            contentSplit.style.zIndex = '1000';
+        }
+        
+        // Update app container
+        const app = document.querySelector('.app');
+        if (app) {
+            app.style.maxWidth = 'none';
+            app.style.padding = '0';
+            app.style.minHeight = '100vh';
+        }
+        
+        // Update body to remove background
+        document.body.style.background = 'white';
+    }
+    
+    initializeIcons() {
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     }
     
     bindEvents() {
@@ -101,10 +159,16 @@ class TidesOverSand {
     
     async signInWithGitHub() {
         try {
+            // Preserve appmode parameter in redirect URL
+            let redirectUrl = window.location.origin + window.location.pathname;
+            if (window.location.search.includes('appmode=1')) {
+                redirectUrl += '?appmode=1';
+            }
+            
             const { data, error } = await this.supabase.auth.signInWithOAuth({
                 provider: 'github',
                 options: {
-                    redirectTo: window.location.origin + window.location.pathname
+                    redirectTo: redirectUrl
                 }
             });
             
@@ -137,15 +201,67 @@ class TidesOverSand {
             const userInfo = document.getElementById('userInfo');
             const userName = this.user.user_metadata?.full_name || this.user.user_metadata?.user_name || this.user.email || 'User';
             userInfo.textContent = `Signed in as ${userName}`;
+            
+            // Show add task UI when logged in
+            const addTaskContainer = document.querySelector('.add-task-container');
+            if (addTaskContainer) {
+                addTaskContainer.style.display = 'flex';
+            }
+            
+            // Remove task area sign-in button if it exists
+            const taskAreaSignIn = document.getElementById('taskAreaSignIn');
+            if (taskAreaSignIn) {
+                taskAreaSignIn.remove();
+            }
         } else {
             document.getElementById('authStatus').style.display = 'none';
-            document.getElementById('signInBtn').style.display = 'block';
+            document.getElementById('signInBtn').style.display = 'none'; // Hide top sign-in button
         }
     }
     
     showSignInUI() {
         document.getElementById('authStatus').style.display = 'none';
-        document.getElementById('signInBtn').style.display = 'block';
+        document.getElementById('signInBtn').style.display = 'none'; // Hide top sign-in button
+        
+        // Hide add task UI and show sign-in button in its place
+        const addTaskContainer = document.querySelector('.add-task-container');
+        const signInBtn = document.getElementById('signInBtn');
+        
+        if (addTaskContainer) {
+            addTaskContainer.style.display = 'none';
+        }
+        
+        // Create or update the sign-in button in the task area
+        this.createTaskAreaSignInButton();
+    }
+    
+    createTaskAreaSignInButton() {
+        // Remove existing task area sign-in button if it exists
+        const existingButton = document.getElementById('taskAreaSignIn');
+        if (existingButton) {
+            existingButton.remove();
+        }
+        
+        // Create new sign-in button for the task area
+        const addTaskContainer = document.querySelector('.add-task-container');
+        if (addTaskContainer) {
+            const signInButton = document.createElement('div');
+            signInButton.id = 'taskAreaSignIn';
+            signInButton.className = 'task-area-signin';
+            signInButton.innerHTML = `
+                <i data-lucide="github" class="github-icon"></i>
+                <span>Sign in with GitHub to add tasks</span>
+            `;
+            
+            // Insert before the add task container
+            addTaskContainer.parentNode.insertBefore(signInButton, addTaskContainer);
+            
+            // Add click handler
+            signInButton.addEventListener('click', () => this.signInWithGitHub());
+            
+            // Initialize icons for the new button
+            this.initializeIcons();
+        }
     }
     
     async addTask() {
@@ -1141,6 +1257,9 @@ class TidesOverSand {
         }).join('');
         
         taskList.innerHTML = htmlContent;
+        
+        // Reinitialize icons for dynamically generated content
+        this.initializeIcons();
     }
     
     escapeHtml(text) {

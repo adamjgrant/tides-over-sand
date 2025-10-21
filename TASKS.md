@@ -22,3 +22,10 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] For the max-width 768px breakpoint, I want the task detail to open in a modal instead.
 - [x] Under the mobile breakpoint, the task list does not scroll.
 - [x] Under the mobile breakpoint, the add new task UI is overflowed out of view. It should be docked to the bottom.
+- [x] Let's bring in an icon library so we can use richer icons instead of existing emojis.
+- [x] When not logged in, The "sign in with github" button should look like a link preceded by a github logo and it should replace the "add task" and "+" button elements.
+    - [x] Rejected: make sure the old "Sign in with github" button at the top of the page is no longer there.
+- [x] New feature. If the url has `?appmode=1`, we show .content-split full screen, popped out of the HTML. The idea is I can save this to my home screen and make it look like a real app on my phone, without all the stuff around it like the title and body copy.
+    - [x] Rejected: We need to make sure in the sign in with github flow that if we already have ?appmode=1 that it persists on the redirect.
+- [ ] Only above the mobile breakpoint and only when the task detail is open, limit the width of the task list container to about 400px, allowing the active task detail panel to occupy the remaining width.
+- [ ] Only when in appmode=1, We should have a thin title bar at the top of the task list with a bold text "Tides over Sand" on the left and on the right we should see "Sign out" which only appears when signed in. It will not say to sign in there when signed out.

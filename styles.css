@@ -127,9 +127,9 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
     background: #c0392b;
 }
 
-.sign-in-btn::before {
-    content: "🐙";
-    font-size: 1rem;
+.github-icon {
+    width: 16px;
+    height: 16px;
 }
 
 /* Content Split Layout */
@@ -376,6 +376,40 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
 
 .add-task-btn:hover {
     background: #2980b9;
+}
+
+.plus-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* Task Area Sign-in Button */
+.task-area-signin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.4rem 1rem;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    margin: 1rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6c757d;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.task-area-signin:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.task-area-signin .github-icon {
+    width: 18px;
+    height: 18px;
 }
 
 /* Modal */

@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -26,7 +27,10 @@
                         <span id="userInfo" class="user-info"></span>
                         <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
                     </div>
-                    <button id="signInBtn" class="sign-in-btn">Sign in with GitHub</button>
+                    <button id="signInBtn" class="sign-in-btn">
+                        <i data-lucide="github" class="github-icon"></i>
+                        Sign in with GitHub
+                    </button>
                 </div>
             </div>
         </header>
@@ -40,7 +44,9 @@
                     
                     <div class="add-task-container">
                         <input type="text" id="newTaskInput" placeholder="Add a new task..." class="new-task-input">
-                        <button id="addTaskBtn" class="add-task-btn">+</button>
+                        <button id="addTaskBtn" class="add-task-btn">
+                            <i data-lucide="plus" class="plus-icon"></i>
+                        </button>
                     </div>
                 </div>
                 
