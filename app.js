@@ -168,6 +168,9 @@ class TidesOverSand {
             this.saveTasksToLocal();
             this.renderTasks();
             input.value = '';
+            
+            // Auto-select the new task and show detail view
+            this.showTaskDetail(data.id);
         } catch (error) {
             console.error('Error adding task:', error);
             alert('Failed to add task. Please try again.');
@@ -1035,8 +1038,8 @@ class TidesOverSand {
         }
         
         const htmlContent = validTasks.map(task => {
-            // Only apply fade class to non-completed tasks
-            const fadeClass = task.completed ? '' : this.getTaskFadeClass(task);
+            // Apply fade class to all tasks based on their lifetime
+            const fadeClass = this.getTaskFadeClass(task);
             
             // Check if task can be uncompleted (within 1 minute)
             const canUncomplete = task.completed && task.completed_at && 

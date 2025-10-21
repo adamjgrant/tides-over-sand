@@ -76,5 +76,5 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
     - [x] Rejected: Still doesn't go away. Check out how we have this implemented when several are deleted in quick succession.
     - [x] Rejected: Still doesn't go away, even if I just delete one item. It's deleted, but the UI to undo just stays forever. Should go away and persist the deletion after 5s.
 - [x] The debounce function to edit fields is a little slow. Can we tighten it?
-- [ ] If I create a task, it should automatically select it and show in the detail view.
-- [ ] If an item is completed, it should still get the faded effect we apply to tasks with a lifetime of 1, 2, 3, 4 etc days. Right now it's always unfaded.
+- [x] If I create a task, it should automatically select it and show in the detail view.
+- [x] If an item is completed, it should still get the faded effect we apply to tasks with a lifetime of 1, 2, 3, 4 etc days. Right now it's always unfaded.
