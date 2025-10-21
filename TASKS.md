@@ -13,3 +13,8 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 6. "x", Air in tires, 4d
 7. " ", Organize toothbrushes, 4d
 8. " ", Clean up attic, 4d
+
+- [x] The delete button is too visible. Can we style the button so it has a transparent background and border and have the text underlined and Grey?
+    - [x] Rejected: Still has a border.
+- [x] When I create a new task, it should be selected and loaded into the detail view after it is populated in the list.
+- [x] The application works correctly when I login to github when running on localhost, but when I have it published to GH pages https://adamjgrant.github.io/tides-over-sand/ it redirects to a localhost address.

@@ -92,7 +92,7 @@ class TidesOverSand {
             const { data, error } = await this.supabase.auth.signInWithOAuth({
                 provider: 'github',
                 options: {
-                    redirectTo: window.location.origin
+                    redirectTo: window.location.origin + window.location.pathname
                 }
             });
             
@@ -173,7 +173,7 @@ class TidesOverSand {
             
             // Auto-select the new task and show detail view
             try {
-                this.showTaskDetail(data.id);
+                this.openTaskDetail(data.id);
             } catch (detailError) {
                 console.error('Error showing task detail:', detailError);
                 // Don't fail the entire operation if detail view fails

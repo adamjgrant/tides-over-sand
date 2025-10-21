@@ -575,19 +575,21 @@ body {
 }
 
 .delete-btn {
-    background: #6c757d;
-    color: white;
+    background: transparent;
+    color: #6c757d;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.2s ease;
+    text-decoration: underline;
 }
 
 .delete-btn:hover {
-    background: #5a6268;
+    background: #f8f9fa;
+    color: #495057;
 }
 
 /* Drag and drop */
