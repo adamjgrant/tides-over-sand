@@ -170,6 +170,14 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
     display: flex;
 }
 
+/* Responsive task list width when detail panel is open */
+@media (min-width: 769px) {
+    .content-split.detail-open .task-list-container {
+        flex: 0 0 400px;
+        max-width: 400px;
+    }
+}
+
 .task-detail-content {
     height: 100%;
     display: flex;
@@ -410,6 +418,146 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
 .task-area-signin .github-icon {
     width: 18px;
     height: 18px;
+}
+
+/* App Mode Title Bar */
+.app-mode-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    min-height: 48px;
+    flex-shrink: 0;
+}
+
+.title-bar-left {
+    display: flex;
+    align-items: center;
+}
+
+.app-title-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.title-bar-right {
+    display: flex;
+    align-items: center;
+}
+
+.app-mode-sign-out-btn {
+    background: transparent;
+    color: #AAAAAA;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.app-mode-sign-out-btn:hover {
+    text-decoration: underline;
+}
+
+.app-mode-exit-btn {
+    background: transparent;
+    color: #AAAAAA;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.app-mode-exit-btn:hover {
+    text-decoration: underline;
+}
+
+/* Enter App Mode Link */
+.app-mode-link-container {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.enter-app-mode-link {
+    color: #AAAAAA;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.enter-app-mode-link:hover {
+    color: #7f8c8d;
+    text-decoration: underline;
+}
+
+/* App Mode Styles */
+body.appmode .header,
+body.appmode .philosophy-section,
+body.appmode .footer,
+body.appmode .app-mode-link-container {
+    display: none;
+}
+
+body.appmode .content-split {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 1000;
+}
+
+body.appmode .app {
+    max-width: none;
+    padding: 0;
+    min-height: 100vh;
+}
+
+body.appmode {
+    background: white;
+}
+
+/* Desktop App Mode - Responsive task list width when detail panel is open */
+@media (min-width: 769px) {
+    body.appmode .content-split.detail-open .task-list-container {
+        flex: 0 0 400px;
+        max-width: 400px;
+    }
+    
+    body.appmode .content-split.detail-open .task-detail-panel {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+    }
+}
+
+/* Mobile App Mode Specific Styles */
+@media (max-width: 768px) {
+    body.appmode .task-list-container {
+        height: 100vh;
+        min-height: 100vh;
+        max-height: 100vh;
+    }
+    
+    body.appmode .add-task-container {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 1rem;
+        border-top: 1px solid #e0e0e0;
+        z-index: 10;
+    }
 }
 
 /* Modal */

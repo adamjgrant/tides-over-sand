@@ -33,6 +33,9 @@ class TidesOverSand {
                 this.renderTasks();
             }
             
+            // Update app mode title bar after auth state is determined
+            this.updateAppModeTitleBar();
+            
             // Listen for auth changes
             this.supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session) {
@@ -45,6 +48,9 @@ class TidesOverSand {
                     this.tasks = [];
                     this.renderTasks();
                 }
+                
+                // Update app mode title bar after auth state changes
+                this.updateAppModeTitleBar();
             });
             
         } catch (error) {
@@ -72,41 +78,89 @@ class TidesOverSand {
     }
     
     enableAppMode() {
-        // Hide header and philosophy section
-        const header = document.querySelector('.header');
-        const philosophySection = document.querySelector('.philosophy-section');
-        const footer = document.querySelector('.footer');
+        // Add appmode class to body
+        document.body.classList.add('appmode');
         
-        if (header) header.style.display = 'none';
-        if (philosophySection) philosophySection.style.display = 'none';
-        if (footer) footer.style.display = 'none';
+        // Add title bar to task list container
+        this.addAppModeTitleBar();
         
-        // Make content-split full screen
-        const contentSplit = document.querySelector('.content-split');
-        if (contentSplit) {
-            contentSplit.style.position = 'fixed';
-            contentSplit.style.top = '0';
-            contentSplit.style.left = '0';
-            contentSplit.style.right = '0';
-            contentSplit.style.bottom = '0';
-            contentSplit.style.width = '100vw';
-            contentSplit.style.height = '100vh';
-            contentSplit.style.maxHeight = '100vh';
-            contentSplit.style.borderRadius = '0';
-            contentSplit.style.boxShadow = 'none';
-            contentSplit.style.zIndex = '1000';
+        // Autoselect first task on desktop if not mobile
+        if (window.innerWidth > 768 && this.tasks && this.tasks.length > 0) {
+            // Small delay to ensure rendering is complete
+            setTimeout(() => {
+                this.openTaskDetail(this.tasks[0].id);
+            }, 100);
         }
+    }
+    
+    disableAppMode() {
+        // Remove appmode class from body
+        document.body.classList.remove('appmode');
         
-        // Update app container
-        const app = document.querySelector('.app');
-        if (app) {
-            app.style.maxWidth = 'none';
-            app.style.padding = '0';
-            app.style.minHeight = '100vh';
+        // Remove title bar if it exists
+        const titleBar = document.getElementById('appModeTitleBar');
+        if (titleBar) {
+            titleBar.remove();
         }
+    }
+    
+    addAppModeTitleBar() {
+        const taskListContainer = document.querySelector('.task-list-container');
+        if (!taskListContainer) return;
         
-        // Update body to remove background
-        document.body.style.background = 'white';
+        // Check if title bar already exists
+        if (document.getElementById('appModeTitleBar')) return;
+        
+        const titleBar = document.createElement('div');
+        titleBar.id = 'appModeTitleBar';
+        titleBar.className = 'app-mode-title-bar';
+        titleBar.innerHTML = `
+            <div class="title-bar-left">
+                <span class="app-title-text">Tides over Sand</span>
+            </div>
+            <div class="title-bar-right">
+                <button id="appModeExitBtn" class="app-mode-exit-btn">Exit app mode</button>
+                <button id="appModeSignOutBtn" class="app-mode-sign-out-btn" style="display: none;">Sign out</button>
+            </div>
+        `;
+        
+        // Insert at the top of the task list container
+        taskListContainer.insertBefore(titleBar, taskListContainer.firstChild);
+        
+        // Add event listeners for buttons
+        document.getElementById('appModeExitBtn').addEventListener('click', () => {
+            this.disableAppMode();
+            window.location.href = '/';
+        });
+        document.getElementById('appModeSignOutBtn').addEventListener('click', () => this.signOut());
+        
+        // Show/hide sign out button based on auth state
+        this.updateAppModeTitleBar();
+    }
+    
+    updateAppModeTitleBar() {
+        const signOutBtn = document.getElementById('appModeSignOutBtn');
+        if (signOutBtn) {
+            signOutBtn.style.display = this.user ? 'block' : 'none';
+        }
+    }
+    
+    checkAppModeAutoselect() {
+        // Check if we're in appmode, on desktop, have tasks, and no task is currently selected
+        const urlParams = new URLSearchParams(window.location.search);
+        const appMode = urlParams.get('appmode');
+        
+        if (appMode === '1' && 
+            window.innerWidth > 768 && 
+            this.tasks && 
+            this.tasks.length > 0 && 
+            !this.currentTaskId) {
+            
+            // Small delay to ensure rendering is complete
+            setTimeout(() => {
+                this.openTaskDetail(this.tasks[0].id);
+            }, 100);
+        }
     }
     
     initializeIcons() {
@@ -217,6 +271,9 @@ class TidesOverSand {
             document.getElementById('authStatus').style.display = 'none';
             document.getElementById('signInBtn').style.display = 'none'; // Hide top sign-in button
         }
+        
+        // Update app mode title bar if in app mode
+        this.updateAppModeTitleBar();
     }
     
     showSignInUI() {
@@ -349,12 +406,25 @@ class TidesOverSand {
         
         document.getElementById('taskDetailPanel').classList.add('active');
         
+        // Add detail-open class to content-split for responsive layout
+        const contentSplit = document.querySelector('.content-split');
+        if (contentSplit && window.innerWidth > 768) {
+            contentSplit.classList.add('detail-open');
+        }
+        
         // Add selected class to the task in the list
         this.updateSelectedTask(taskId);
     }
     
     closeDetailPanel() {
         document.getElementById('taskDetailPanel').classList.remove('active');
+        
+        // Remove detail-open class from content-split
+        const contentSplit = document.querySelector('.content-split');
+        if (contentSplit) {
+            contentSplit.classList.remove('detail-open');
+        }
+        
         this.currentTaskId = null;
         this.isEditing = false;
         
@@ -1050,6 +1120,9 @@ class TidesOverSand {
             // Set up real-time subscription
             this.setupRealtimeSubscription();
             
+            // Autoselect first task in appmode on desktop
+            this.checkAppModeAutoselect();
+            
         } catch (error) {
             console.error('Error loading tasks:', error);
             // Fallback to local storage
@@ -1096,6 +1169,9 @@ class TidesOverSand {
             }
         }
         this.renderTasks();
+        
+        // Autoselect first task in appmode on desktop
+        this.checkAppModeAutoselect();
     }
     
     async deleteExpiredTasks(expiredTasks) {

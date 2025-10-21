@@ -27,5 +27,13 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
     - [x] Rejected: make sure the old "Sign in with github" button at the top of the page is no longer there.
 - [x] New feature. If the url has `?appmode=1`, we show .content-split full screen, popped out of the HTML. The idea is I can save this to my home screen and make it look like a real app on my phone, without all the stuff around it like the title and body copy.
     - [x] Rejected: We need to make sure in the sign in with github flow that if we already have ?appmode=1 that it persists on the redirect.
-- [ ] Only above the mobile breakpoint and only when the task detail is open, limit the width of the task list container to about 400px, allowing the active task detail panel to occupy the remaining width.
-- [ ] Only when in appmode=1, We should have a thin title bar at the top of the task list with a bold text "Tides over Sand" on the left and on the right we should see "Sign out" which only appears when signed in. It will not say to sign in there when signed out.
+- [x] Only above the mobile breakpoint and only when the task detail is open, limit the width of the task list container to about 400px, allowing the active task detail panel to occupy the remaining width.
+    - [x] Rejected On non mobile in app mode, the task list is not limited by 400px width.
+    - [x] Rejected: The task list is good now but the task detail doesn't fill the remaining horizontal space.
+- [x] Only when in appmode=1, We should have a thin title bar at the top of the task list with a bold text "Tides over Sand" on the left and on the right we should see "Sign out" which only appears when signed in. It will not say to sign in there when signed out.
+    - [x] Rejected: When in appmode and signed out, the "Sign out" button is not there. However, if I sign in, then sign out again, it stays there.
+- [x] I want a similar button styled exactly the same way to the left of the sign out button that appears only in appmode but this one is "Exit app mode" and it redirects to `/` without the url params.
+- [x] Just below .content-split, I want a simple link in #AAAAAA font color that says "Enter app mode" which will redirect to `/?appmode=1`
+- [x] There are way too many `!important;`s in the CSS. This points to bad programming. Please review.
+- [x] On mobile in appmode, The "Add new task" does not appear docked at the bottom. This might be because .task-list-container does not occupy the full vertical viewport either.
+- [x] If the page opens and we are in app mode, and we're not under the mobile breakpoint, autoselect the first task.
