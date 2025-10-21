@@ -36,15 +36,13 @@
                     
                     <div class="add-task-container">
                         <input type="text" id="newTaskInput" placeholder="Add a new task..." class="new-task-input">
-                        <button id="addTaskBtn" class="add-task-btn">Add</button>
+                        <button id="addTaskBtn" class="add-task-btn">+</button>
                     </div>
                 </div>
                 
                 <div class="task-detail-panel" id="taskDetailPanel">
+                    <button class="close-detail-btn" id="closeDetailPanel">&times;</button>
                     <div class="task-detail-content">
-                        <div class="task-detail-header">
-                            <button class="close-detail-btn" id="closeDetailPanel">&times;</button>
-                        </div>
                         <div class="task-detail-body">
                             <div class="task-title-section">
                                 <input type="text" id="detailTaskTitle" class="task-title-input" placeholder="Task title...">
@@ -59,7 +57,8 @@
                                 <div class="lifetime-footer">
                                     <div class="lifetime-info">
                                         <span class="lifetime-label">Lifetime:</span>
-                                        <span id="detailLifetimeValue" class="lifetime-value"></span>
+                                        <span id="detailLifetimeValue" class="lifetime-value" onclick="app.editLifetime()"></span>
+                                        <input id="detailLifetimeInput" class="lifetime-input" type="number" min="0" max="4" style="display: none;" onblur="app.saveLifetime()" onkeypress="app.handleLifetimeKeypress(event)">
                                         <button id="detailRenewTaskBtn" class="renew-btn" style="display: none;">Renew</button>
                                     </div>
                                     <button id="detailDeleteTaskBtn" class="delete-btn">Delete</button>
@@ -77,8 +76,16 @@
                 <p>This app explores a different approach inspired by writing in sand on a beach. Like sand that holds writing well but gradually fades away with the tides, your tasks will fade each day until they naturally disappear after 5 days unless you actively renew them. This encourages you to focus on what's truly important while remaining flexible to changing priorities.</p>
                 
                 <p>Simply drag tasks above others to renew them, or let them fade away naturally. The goal is to work more organically—staying in touch with your environment and what matters moment to moment, rather than being bound to arbitrary priorities from the past.</p>
+                
+                <p><em>Note: This is a proof of concept demonstration, but your data is fully persisted and the application is fully functional. Tasks are stored and synchronized across devices when you sign in.</em></p>
             </div>
         </main>
+        
+        <!-- Delete Notification -->
+        <div class="delete-notification" id="deleteNotification" style="display: none;">
+            <span id="deleteMessage">Task deleted</span>
+            <button id="undoDeleteBtn" class="undo-btn">Undo</button>
+        </div>
     </div>
     
     <script src="app.js"></script>

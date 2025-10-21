@@ -5,6 +5,8 @@ class TidesOverSand {
         this.isEditing = false;
         this.draggedTaskId = null;
         this.user = null;
+        this.deletedTask = null;
+        this.deleteTimeout = null;
         
         // Supabase configuration
         this.supabaseUrl = 'https://osdkeyueeapdaurhacei.supabase.co';
@@ -70,6 +72,7 @@ class TidesOverSand {
         document.getElementById('closeDetailPanel').addEventListener('click', () => this.closeDetailPanel());
         document.getElementById('detailDeleteTaskBtn').addEventListener('click', () => this.deleteTask());
         document.getElementById('detailRenewTaskBtn').addEventListener('click', () => this.renewTask());
+        document.getElementById('undoDeleteBtn').addEventListener('click', () => this.undoDelete());
         
         // Auto-save with debouncing
         this.saveTimeout = null;
@@ -149,7 +152,8 @@ class TidesOverSand {
             completed: false,
             completed_at: null,
             created_at: new Date().toISOString(),
-            renewed_at: new Date().toISOString()
+            renewed_at: new Date().toISOString(),
+            sort_order: 0
         };
         
         try {
@@ -202,7 +206,8 @@ class TidesOverSand {
         
         // Show/hide renew button
         const renewBtn = document.getElementById('detailRenewTaskBtn');
-        const canRenew = this.canRenewTask(task);
+        const lifetime = this.getTaskLifetime(task);
+        const canRenew = this.canRenewTask(task) && lifetime > 0;
         renewBtn.style.display = canRenew ? 'inline-block' : 'none';
         
         document.getElementById('taskDetailPanel').classList.add('active');
@@ -289,25 +294,76 @@ class TidesOverSand {
     async deleteTask() {
         if (!this.user || !this.currentTaskId) return;
         
-        if (confirm('Are you sure you want to delete this task?')) {
-            try {
-                const { error } = await this.supabase
-                    .from('tasks')
-                    .delete()
-                    .eq('id', this.currentTaskId)
-                    .eq('user_id', this.user.id);
-                
-                if (error) throw error;
-                
-                this.tasks = this.tasks.filter(t => t.id !== this.currentTaskId);
-                this.saveTasksToLocal();
-                this.renderTasks();
-                this.closeDetailPanel();
-            } catch (error) {
-                console.error('Error deleting task:', error);
-                alert('Failed to delete task. Please try again.');
-            }
+        const task = this.tasks.find(t => t.id === this.currentTaskId);
+        if (!task) return;
+        
+        // Store the deleted task for potential undo
+        this.deletedTask = { ...task };
+        
+        // Remove from local array immediately
+        this.tasks = this.tasks.filter(t => t.id !== this.currentTaskId);
+        this.saveTasksToLocal();
+        this.renderTasks();
+        this.closeDetailPanel();
+        
+        // Show notification
+        this.showDeleteNotification();
+        
+        // Set timeout to actually delete from Supabase after 5 seconds
+        this.deleteTimeout = setTimeout(() => {
+            this.performActualDelete();
+        }, 5000);
+    }
+    
+    showDeleteNotification() {
+        const notification = document.getElementById('deleteNotification');
+        notification.style.display = 'flex';
+    }
+    
+    hideDeleteNotification() {
+        const notification = document.getElementById('deleteNotification');
+        notification.style.display = 'none';
+    }
+    
+    async undoDelete() {
+        if (!this.deletedTask) return;
+        
+        // Clear the delete timeout
+        if (this.deleteTimeout) {
+            clearTimeout(this.deleteTimeout);
+            this.deleteTimeout = null;
         }
+        
+        // Restore the task
+        this.tasks.unshift(this.deletedTask);
+        this.saveTasksToLocal();
+        this.renderTasks();
+        
+        // Hide notification
+        this.hideDeleteNotification();
+        this.deletedTask = null;
+    }
+    
+    async performActualDelete() {
+        if (!this.deletedTask) return;
+        
+        try {
+            const { error } = await this.supabase
+                .from('tasks')
+                .delete()
+                .eq('id', this.deletedTask.id)
+                .eq('user_id', this.user.id);
+            
+            if (error) {
+                console.error('Error deleting task from Supabase:', error);
+            }
+        } catch (error) {
+            console.error('Error deleting task from Supabase:', error);
+        }
+        
+        // Hide notification and clear deleted task
+        this.hideDeleteNotification();
+        this.deletedTask = null;
     }
     
     async renewTask() {
@@ -354,7 +410,7 @@ class TidesOverSand {
             
             this.saveTasksToLocal();
             this.renderTasks();
-            this.closeDetailPanel();
+            // Keep detail panel open after renewal
         } catch (error) {
             console.error('Error renewing task:', error);
             alert('Failed to renew task. Please try again.');
@@ -453,7 +509,7 @@ class TidesOverSand {
         if (body.trim()) {
             preview.innerHTML = this.parseMarkdown(body);
         } else {
-            preview.innerHTML = '<em>Click to add details...</em>';
+            preview.innerHTML = '<em style="color: #6c757d;">Click to add details...</em>';
         }
     }
     
@@ -535,36 +591,48 @@ class TidesOverSand {
         
         if (!draggedTask || !targetTask) return;
         
-        // Remove dragged task
-        this.tasks = this.tasks.filter(t => t.id !== draggedId);
+        // Get all tasks with the same renewal date as target
+        const targetDate = new Date(targetTask.renewed_at);
+        targetDate.setHours(0, 0, 0, 0);
         
-        // Find target position
-        const targetIndex = this.tasks.findIndex(t => t.id === targetId);
+        const sameDateTasks = this.tasks.filter(task => {
+            const taskDate = new Date(task.renewed_at);
+            taskDate.setHours(0, 0, 0, 0);
+            return taskDate.getTime() === targetDate.getTime();
+        }).sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0));
         
-        // Insert before target
-        this.tasks.splice(targetIndex, 0, draggedTask);
+        // Find target position in same-date tasks
+        const targetIndex = sameDateTasks.findIndex(t => t.id === targetId);
         
-        // Update renewal date
-        const targetRenewedAt = new Date(targetTask.renewed_at);
-        const renewalDate = new Date(targetRenewedAt);
-        renewalDate.setDate(renewalDate.getDate() - 1);
-        
-        // If target was created today, set renewal to today
-        const today = new Date();
-        const targetCreatedToday = targetRenewedAt.toDateString() === today.toDateString();
-        
-        const newRenewalDate = targetCreatedToday ? today.toISOString() : renewalDate.toISOString();
+        // Calculate new sort order
+        let newSortOrder;
+        if (targetIndex === 0) {
+            // Target is first, put dragged task above it
+            newSortOrder = (sameDateTasks[0].sort_order || 0) + 1;
+        } else {
+            // Put dragged task between target and the task above it
+            const taskAbove = sameDateTasks[targetIndex - 1];
+            const targetSortOrder = targetTask.sort_order || 0;
+            const aboveSortOrder = taskAbove.sort_order || 0;
+            newSortOrder = Math.floor((aboveSortOrder + targetSortOrder) / 2);
+            
+            // If they're the same, increment by 1
+            if (newSortOrder === targetSortOrder) {
+                newSortOrder = targetSortOrder + 1;
+            }
+        }
         
         try {
+            // Update in Supabase
             const { error } = await this.supabase
                 .from('tasks')
-                .update({ renewed_at: newRenewalDate })
+                .update({ sort_order: newSortOrder })
                 .eq('id', draggedId)
                 .eq('user_id', this.user.id);
             
             if (error) throw error;
             
-            draggedTask.renewed_at = newRenewalDate;
+            draggedTask.sort_order = newSortOrder;
             
             this.saveTasksToLocal();
             this.renderTasks();
@@ -665,10 +733,22 @@ class TidesOverSand {
     renderTasks() {
         const taskList = document.getElementById('taskList');
         
-        // Sort tasks by renewal date (most recent first)
-        const sortedTasks = [...this.tasks].sort((a, b) => 
-            new Date(b.renewed_at) - new Date(a.renewed_at)
-        );
+        // Sort tasks by renewal date (date only, most recent first), then by sort_order
+        const sortedTasks = [...this.tasks].sort((a, b) => {
+            // Compare dates only (set time to 00:00:00)
+            const dateA = new Date(a.renewed_at);
+            dateA.setHours(0, 0, 0, 0);
+            const dateB = new Date(b.renewed_at);
+            dateB.setHours(0, 0, 0, 0);
+            
+            const dateDiff = dateB - dateA;
+            if (dateDiff !== 0) return dateDiff;
+            
+            // If dates are equal, use sort_order as secondary sort
+            const sortOrderA = a.sort_order || 0;
+            const sortOrderB = b.sort_order || 0;
+            return sortOrderB - sortOrderA;
+        });
         
         // Remove expired tasks (5d+ old)
         const validTasks = sortedTasks.filter(task => {
@@ -720,10 +800,18 @@ class TidesOverSand {
             const canUncomplete = task.completed && task.completed_at && 
                 (new Date() - new Date(task.completed_at)) <= 60000;
             
-            const checkboxElement = canUncomplete ? 
-                `<div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                     onclick="event.stopPropagation(); app.toggleTaskCompletion('${task.id}')"></div>` :
-                `<div class="task-checkbox-icon">✓</div>`;
+            let checkboxElement;
+            if (task.completed) {
+                // For completed tasks, show icon if can't uncomplete, checkbox if can
+                checkboxElement = canUncomplete ? 
+                    `<div class="task-checkbox checked" 
+                         onclick="event.stopPropagation(); app.toggleTaskCompletion('${task.id}')"></div>` :
+                    `<div class="task-checkbox-icon">✓</div>`;
+            } else {
+                // For incomplete tasks, always show clickable checkbox
+                checkboxElement = `<div class="task-checkbox" 
+                     onclick="event.stopPropagation(); app.toggleTaskCompletion('${task.id}')"></div>`;
+            }
             
             return `
                 <div class="task-item ${fadeClass} ${task.completed ? 'completed' : ''}" 
@@ -742,6 +830,69 @@ class TidesOverSand {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    editLifetime() {
+        const valueSpan = document.getElementById('detailLifetimeValue');
+        const inputField = document.getElementById('detailLifetimeInput');
+        
+        if (!this.currentTaskId) return;
+        
+        const task = this.tasks.find(t => t.id === this.currentTaskId);
+        if (!task) return;
+        
+        const currentLifetime = this.getTaskLifetime(task);
+        
+        // Hide span, show input
+        valueSpan.style.display = 'none';
+        inputField.style.display = 'inline-block';
+        inputField.value = currentLifetime;
+        inputField.focus();
+        inputField.select();
+    }
+    
+    saveLifetime() {
+        const valueSpan = document.getElementById('detailLifetimeValue');
+        const inputField = document.getElementById('detailLifetimeInput');
+        
+        if (!this.currentTaskId) return;
+        
+        const task = this.tasks.find(t => t.id === this.currentTaskId);
+        if (!task) return;
+        
+        let newLifetime = parseInt(inputField.value);
+        
+        // Validate input
+        if (isNaN(newLifetime) || newLifetime < 0 || newLifetime > 4) {
+            newLifetime = this.getTaskLifetime(task); // Reset to current value
+        }
+        
+        // Update task renewal date to reflect new lifetime
+        const now = new Date();
+        const newRenewalDate = new Date(now.getTime() - (newLifetime * 24 * 60 * 60 * 1000));
+        task.renewed_at = newRenewalDate.toISOString();
+        
+        // Update UI
+        valueSpan.textContent = `${newLifetime}d`;
+        valueSpan.style.display = 'inline-block';
+        inputField.style.display = 'none';
+        
+        // Save to Supabase
+        this.saveTask();
+        this.renderTasks();
+        this.updateLifetimeDisplay(task);
+    }
+    
+    handleLifetimeKeypress(event) {
+        if (event.key === 'Enter') {
+            this.saveLifetime();
+        } else if (event.key === 'Escape') {
+            // Cancel editing
+            const valueSpan = document.getElementById('detailLifetimeValue');
+            const inputField = document.getElementById('detailLifetimeInput');
+            valueSpan.style.display = 'inline-block';
+            inputField.style.display = 'none';
+        }
     }
 }
 

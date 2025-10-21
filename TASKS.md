@@ -17,7 +17,7 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] I want the tasks to open as a right side split next to the task list, not as a modal.
 - [x] I can currently un-complete a completed task that was completed more than a minute ago. Review PROJECT.md for requirements.
     - [x] Rejected: The business logic is correct now, but it shows an error alert. Instead it should just be implicit. For these kinds of rows, we should just replace the checkbox element with an icon of a checkbox.
-    - [ ] Rejected: The aforementioned change should only apply to completed tasks. Currently it applies to incomplete tasks too.
+    - [x] Rejected: The aforementioned change should only apply to completed tasks. Currently it applies to incomplete tasks too.
 - [x] Language change: "Like sand that holds writing well when wet but fades as it dries" should be "Like sand that holds writing well but gradually fades away with the tides"
 - [x] Language change: "your tasks naturally disappear after 5 days unless you actively renew them" should be "your tasks will fade each day until they naturally disappear after 5 days unless you actively renew them"
 - [x] When tasks are marked completed, they also fade to a lighter color, but we should reserve lighter color fading for renewal date aging. The only visual change from a completed task should be the strikethrough and the box being checked.
@@ -44,15 +44,28 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] When task detail is open, the task list and the task detail appear as two rounded rectangles with a space between them. I want them to work together as one rounded rectangle with no space between.
 - [x] The lifetime footer looks great, but let's include the delete button in it and make that footer span with width of the task detail.
 - [x] When the task detail is open, we have visually a parent rounded rectangle that takes on the height of either the task list or the task detail, whichever is bigger. When the task detail is taller, the "add new task" footer does not float to the bottom visually. Same thing with the lifetime footer in the detail view. So we should maybe use flexbox or similar to make sure both vertically take up max parent container height and make sure those elements are docked to the bottom.
-    - [ ] Rejected: The delete button is now in the element containing the lifteime UI. That's good. But the delete button and renew button are styled differently. They should both be monotone and same font size etc. They should also have a little margin between them.
-    - [ ] Rejected: The element containing the lifetime UI and delete button is not docked to the bottom nor does it span horizontally the task detail.
+    - [x] Rejected: The delete button is now in the element containing the lifteime UI. That's good. But the delete button and renew button are styled differently. They should both be monotone and same font size etc. They should also have a little margin between them.
+    - [x] Rejected: The element containing the lifetime UI and delete button is not docked to the bottom nor does it span horizontally the task detail.
+    - [x] Rejected: Still not docked to the bottom. Note that this element has an element inside it, .task-meta-section and its the element above that, .task-detail-body that vertically spans the height of the whole parent container, so your flexbox code is probably one layer too deep.
 - [x] We don't need the "Task Details" heading on the task detail. It's implicit.
-    - [ ] Rejected: This heading is gone, but the bulky container using it is still there. Remove it entirely and let the "x" to close just float somewhere in the top right corner.
+    - [x] Rejected: This heading is gone, but the bulky container using it is still there. Remove it entirely and let the "x" to close just float somewhere in the top right corner.
 - [x] When task detail is open, we should visually denote in the list view which item we're showing detail on. Pick a subtle design way to do this.
 - [x] When editing the body of the task, we have a separate element below it showing the markdown preview. It should only show one or the other. So by default it shows the preview, then when a user clicks on the preview, they are focused on the textarea to edit it. Similarly, when they unfocus, it reverts to the preview.
-    - [ ] Rejected: Correct that the preview is only visible at first, but when I click, I should see the textarea *and not* the preview. So I either see the editor (if I'm clicked into it) or the preview (if I'm not), never both. 
-      - [ ] If there is no description, I should also see the same placeholder text from the textarea on the preview, but only if the textarea's contents are actually blank.
-- [ ] The cursor for task row items and buttons should be a pointer.
-- [ ] Instead of confirming to delete, we should visually show it as deleted and show some small UI up at the top saying it's deleted but allowing the user to click "undo." This will be possible for 5 seconds before the notification goes away and the item is actually deleted both visually and in supabase.
-- [ ] If I click the renew button in the task detail, the task detail is closed. It should remain open
-- [ ] If the lifetime is 0d, don't show the renew button.
+    - [x] Rejected: Correct that the preview is only visible at first, but when I click, I should see the textarea *and not* the preview. So I either see the editor (if I'm clicked into it) or the preview (if I'm not), never both. 
+      - [x] If there is no description, I should also see the same placeholder text from the textarea on the preview, but only if the textarea's contents are actually blank.
+- [x] The cursor for task row items and buttons should be a pointer.
+    - [x] Rejected: I still don't see a pointer cursor on those elements. Also make sure there is a text-entry cursor when hovering over the task detail body preview or textarea.
+- [x] Instead of confirming to delete, we should visually show it as deleted and show some small UI up at the top saying it's deleted but allowing the user to click "undo." This will be possible for 5 seconds before the notification goes away and the item is actually deleted both visually and in supabase.
+- [x] If I click the renew button in the task detail, the task detail is closed. It should remain open
+- [x] If the lifetime is 0d, don't show the renew button.
+- [x] Small adjustment to the what is this about area to denote that this is just a proof of concept but data is persisted and it should be fully functional.
+- [x] Let's remove the padding on .add-task-container and take off the border on the task entry input. That whole element should just be white background including the input.
+- [x] Change the add item button in .add-task-container to just contain the "+" icon, but still white on blue, and the button should be a circle. Since the input next to it will dictate the height of the parent, have it vertically align with the input.
+- [x] Give the task UI a max height so that it doesn't flow beyond the device viewport and is never taller than 800px. If the task list is too big, it will scroll.
+- [x] The task detail body preview still shows up with a gray background and a hover effect. It should have neither. Just let it be white background.
+- [x] Let's add the ability to edit that lifetime UI in the footer of the task detail. Can we have it work like the body preview where it always shows what it shows currently unless I click on it, then it shows an input that only allows numbers and only values 0 through 4. Then when I unfocus that input, it will save and revert back to showing the existing UI with the updated value.
+    - [x] Rejected: When I click outside, I get this error: app.js:856 Uncaught TypeError: this.saveTasksToSupabase is not a function at TidesOverSand.saveLifetime (app.js:856:14) at HTMLInputElement.onblur (VM4257 :1:5)
+    - [ ] Rejected: No longer getting an error but when I refresh after changing, it still shows 0 after changing it to a different number 1-4. I should also note that we should think through how we implement this because this value should increment by one day each day. We don't want to store the lifetime value as an integer, we want it to be based on a date stored in supabase. Make sure it works that way so this xd value is implicitly created and when we edit x, it changes the date accordingly in supabase.
+- [x] There is a sorting quirk where if I have list items all created today, then I drag item #4 to be above #3, it instead goes all the way to the top. I think this is because of our sorting logic being only tied to the "renewal/created" time. We probably need a secondary sort that is just plain force ranking. Sorting should not take into account time, only date. So we assume 00:00 as the time for every renewal date. That way we can fall back to this force-ranking sort order if present. Let me know if I need to run anything in supabase to make this work.
+    - [x] Rejected: This quirk is still happening.
+    - [ ] Rejected: Still happening. Confirming that I did run the SQL in supabase, but you can use the diagnosis folder to run diagnostics for yourself if you want to investigate. See AGENTS.md
