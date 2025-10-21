@@ -573,10 +573,13 @@ html.appmode {
         max-height: 100dvh;
     }
     
-    body.appmode .task-list-container {
-        height: 100dvh;
-        min-height: 100dvh;
-        max-height: 100dvh;
+    /* Only apply full height to task list on desktop standalone mode */
+    @media (min-width: 769px) {
+        body.appmode .task-list-container {
+            height: 100dvh;
+            min-height: 100dvh;
+            max-height: 100dvh;
+        }
     }
 }
 
@@ -598,21 +601,26 @@ html.appmode {
 /* Mobile App Mode Specific Styles */
 @media (max-width: 768px) {
     body.appmode .task-list-container {
-        height: 100dvh; /* Dynamic viewport height for iOS */
+        position: relative; /* For absolute positioning of add task area */
+        height: 100dvh; /* Full height for task list */
         min-height: 100dvh;
         max-height: 100dvh;
         /* Account for safe area insets */
-        padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Make room for add task area */
     }
     
     body.appmode .add-task-container {
-        position: sticky;
+        position: absolute; /* Absolutely position at bottom */
         bottom: 0;
+        left: 0;
+        right: 0;
         background: white;
         padding: 1rem;
         padding-bottom: calc(1rem + env(safe-area-inset-bottom));
         border-top: 1px solid #e0e0e0;
         z-index: 10;
+        height: 80px; /* Fixed height for add task container */
+        box-sizing: border-box;
     }
     
     /* Fallback for older browsers */
@@ -621,6 +629,7 @@ html.appmode {
             height: 100vh;
             min-height: 100vh;
             max-height: 100vh;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
         }
     }
 }

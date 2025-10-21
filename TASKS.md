@@ -39,3 +39,4 @@ Note when the human rejects a task, he will uncheck a task and create a subtask 
 - [x] If the page opens and we are in app mode, and we're not under the mobile breakpoint, autoselect the first task.
 - [x] When exiting app mode, it takes us to `/`. Instead let's have it redirect to whatever the current URL is minus url params.
 - [x] Right now we display none things when in app mode. Let's also display none anything in body div.app that is not main.main-content.
+- [x] On iOS safari, specifically when using a home screen app for this web app, everything looks great in the way it works with the notch at the top. But at the bottom, the add new task area does not dock to the bottom suggesting the div that pushes it down isn't taking up the needed height.
