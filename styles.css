@@ -610,10 +610,6 @@ html.appmode {
     }
     
     body.appmode .add-task-container {
-        position: absolute; /* Absolutely position at bottom */
-        bottom: 0;
-        left: 0;
-        right: 0;
         background: white;
         padding: 0;
         border-top: 1px solid #e0e0e0;
