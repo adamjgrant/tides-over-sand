@@ -5,8 +5,7 @@ class TidesOverSand {
         this.isEditing = false;
         this.draggedTaskId = null;
         this.user = null;
-        this.deletedTask = null;
-        this.deleteTimeout = null;
+        this.pendingDeletes = new Map(); // Track multiple pending deletes
         
         // Supabase configuration
         this.supabaseUrl = 'https://osdkeyueeapdaurhacei.supabase.co';
@@ -248,10 +247,10 @@ class TidesOverSand {
             clearTimeout(this.saveTimeout);
         }
         
-        // Set new timeout for 1 second
+        // Set new timeout for 300ms
         this.saveTimeout = setTimeout(() => {
             this.saveTask();
-        }, 1000);
+        }, 300);
     }
     
     async saveTask() {
@@ -273,7 +272,8 @@ class TidesOverSand {
                 .from('tasks')
                 .update({
                     title: newTitle,
-                    body: newBody
+                    body: newBody,
+                    renewed_at: task.renewed_at
                 })
                 .eq('id', this.currentTaskId)
                 .eq('user_id', this.user.id);
@@ -297,27 +297,41 @@ class TidesOverSand {
         const task = this.tasks.find(t => t.id === this.currentTaskId);
         if (!task) return;
         
+        const taskId = this.currentTaskId;
+        
         // Store the deleted task for potential undo
-        this.deletedTask = { ...task };
+        this.pendingDeletes.set(taskId, { ...task });
         
         // Remove from local array immediately
-        this.tasks = this.tasks.filter(t => t.id !== this.currentTaskId);
+        this.tasks = this.tasks.filter(t => t.id !== taskId);
         this.saveTasksToLocal();
         this.renderTasks();
         this.closeDetailPanel();
         
         // Show notification
-        this.showDeleteNotification();
+        this.showDeleteNotification(taskId);
         
         // Set timeout to actually delete from Supabase after 5 seconds
-        this.deleteTimeout = setTimeout(() => {
-            this.performActualDelete();
+        const deleteTimeout = setTimeout(() => {
+            this.performActualDelete(taskId);
         }, 5000);
+        
+        // Store the timeout so we can clear it if needed
+        this.pendingDeletes.get(taskId).timeout = deleteTimeout;
     }
     
-    showDeleteNotification() {
+    showDeleteNotification(taskId) {
         const notification = document.getElementById('deleteNotification');
+        const message = document.getElementById('deleteMessage');
+        message.textContent = 'Task deleted';
         notification.style.display = 'flex';
+        
+        // Auto-hide notification after 5 seconds
+        setTimeout(() => {
+            if (this.pendingDeletes.size === 0) {
+                this.hideDeleteNotification();
+            }
+        }, 5000);
     }
     
     hideDeleteNotification() {
@@ -326,32 +340,41 @@ class TidesOverSand {
     }
     
     async undoDelete() {
-        if (!this.deletedTask) return;
+        // Undo the most recent delete
+        if (this.pendingDeletes.size === 0) return;
+        
+        const [taskId, taskData] = this.pendingDeletes.entries().next().value;
         
         // Clear the delete timeout
-        if (this.deleteTimeout) {
-            clearTimeout(this.deleteTimeout);
-            this.deleteTimeout = null;
+        if (taskData.timeout) {
+            clearTimeout(taskData.timeout);
         }
         
         // Restore the task
-        this.tasks.unshift(this.deletedTask);
+        this.tasks.unshift(taskData);
         this.saveTasksToLocal();
         this.renderTasks();
         
-        // Hide notification
-        this.hideDeleteNotification();
-        this.deletedTask = null;
+        // Remove from pending deletes
+        this.pendingDeletes.delete(taskId);
+        
+        // Update notification or hide if no more pending
+        if (this.pendingDeletes.size === 0) {
+            this.hideDeleteNotification();
+        } else {
+            this.showDeleteNotification();
+        }
     }
     
-    async performActualDelete() {
-        if (!this.deletedTask) return;
+    async performActualDelete(taskId) {
+        const taskData = this.pendingDeletes.get(taskId);
+        if (!taskData) return;
         
         try {
             const { error } = await this.supabase
                 .from('tasks')
                 .delete()
-                .eq('id', this.deletedTask.id)
+                .eq('id', taskId)
                 .eq('user_id', this.user.id);
             
             if (error) {
@@ -361,9 +384,8 @@ class TidesOverSand {
             console.error('Error deleting task from Supabase:', error);
         }
         
-        // Hide notification and clear deleted task
-        this.hideDeleteNotification();
-        this.deletedTask = null;
+        // Remove from pending deletes
+        this.pendingDeletes.delete(taskId);
     }
     
     async renewTask() {
@@ -576,19 +598,32 @@ class TidesOverSand {
         taskList.addEventListener('drop', (e) => {
             e.preventDefault();
             const taskElement = e.target.closest('.task-item');
+            console.log('Drop event:', {
+                draggedId: this.draggedTaskId,
+                targetId: taskElement?.dataset.taskId,
+                targetElement: taskElement
+            });
             if (taskElement && this.draggedTaskId) {
-                this.handleTaskReorder(this.draggedTaskId, taskElement.dataset.taskId);
+                // Determine if drop is above or below the target
+                const rect = taskElement.getBoundingClientRect();
+                const dropY = e.clientY;
+                const targetCenterY = rect.top + rect.height / 2;
+                const dropAbove = dropY < targetCenterY;
+                
+                this.handleTaskReorder(this.draggedTaskId, taskElement.dataset.taskId, dropAbove);
             }
             taskElement?.classList.remove('drag-over');
         });
     }
     
-    async handleTaskReorder(draggedId, targetId) {
+    async handleTaskReorder(draggedId, targetId, dropAbove = true) {
+        console.log('handleTaskReorder called:', { draggedId, targetId, dropAbove });
         if (!this.user || draggedId === targetId) return;
         
         const draggedTask = this.tasks.find(t => t.id === draggedId);
         const targetTask = this.tasks.find(t => t.id === targetId);
         
+        console.log('Tasks found:', { draggedTask: !!draggedTask, targetTask: !!targetTask });
         if (!draggedTask || !targetTask) return;
         
         // Get all tasks with the same renewal date as target
@@ -604,40 +639,240 @@ class TidesOverSand {
         // Find target position in same-date tasks
         const targetIndex = sameDateTasks.findIndex(t => t.id === targetId);
         
-        // Calculate new sort order
+        // Calculate new sort order based on drop position
         let newSortOrder;
-        if (targetIndex === 0) {
-            // Target is first, put dragged task above it
-            newSortOrder = (sameDateTasks[0].sort_order || 0) + 1;
-        } else {
-            // Put dragged task between target and the task above it
-            const taskAbove = sameDateTasks[targetIndex - 1];
-            const targetSortOrder = targetTask.sort_order || 0;
-            const aboveSortOrder = taskAbove.sort_order || 0;
-            newSortOrder = Math.floor((aboveSortOrder + targetSortOrder) / 2);
-            
-            // If they're the same, increment by 1
-            if (newSortOrder === targetSortOrder) {
-                newSortOrder = targetSortOrder + 1;
+        let isForceRanking = false;
+        
+        if (dropAbove) {
+            // Dropping above target
+            if (targetIndex === 0) {
+                // Target is first, put dragged task above it
+                newSortOrder = (sameDateTasks[0].sort_order || 0) + 1;
+                console.log('Target is first, dropping above, new sort_order:', newSortOrder);
+            } else {
+                // Put dragged task between target and the task above it
+                const taskAbove = sameDateTasks[targetIndex - 1];
+                const targetSortOrder = targetTask.sort_order || 0;
+                const aboveSortOrder = taskAbove.sort_order || 0;
+                
+                // Always use force ranking for same-date tasks to ensure proper positioning
+                if (true) {
+                    // Force ranking: reassign all sort_order values systematically
+                    isForceRanking = true;
+                    console.log('Performing force ranking for same-date tasks');
+                    
+                    // Get current visual order of all same-date tasks (ascending)
+                    const visualOrder = [...sameDateTasks].sort((a, b) => {
+                        if ((a.sort_order || 0) !== (b.sort_order || 0)) {
+                            return (a.sort_order || 0) - (b.sort_order || 0);
+                        }
+                        // If sort_order is the same, maintain original order
+                        return sameDateTasks.indexOf(a) - sameDateTasks.indexOf(b);
+                    });
+                    
+                    console.log('Current visual order:', visualOrder.map(t => t.id));
+                    
+                    // Find where to insert the dragged task
+                    const insertIndex = visualOrder.findIndex(t => t.id === targetId);
+                    console.log(`Inserting ${draggedId} at position ${insertIndex}`);
+                    
+                    // Reassign sort_order values starting from 0
+                    let sortOrder = 0;
+                    for (let i = 0; i < visualOrder.length; i++) {
+                        if (i === insertIndex) {
+                            // This is where we want to insert the dragged task
+                            newSortOrder = sortOrder;
+                            console.log(`Assigned dragged task ${draggedId} sort_order: ${newSortOrder}`);
+                            sortOrder++; // Increment for next item
+                        }
+                        
+                        if (visualOrder[i].id !== draggedId) {
+                            visualOrder[i].sort_order = sortOrder;
+                            console.log(`Assigned ${visualOrder[i].id} sort_order: ${sortOrder}`);
+                            sortOrder++;
+                        }
+                    }
+                } else {
+                    // Normal case: put between them
+                    newSortOrder = Math.floor((aboveSortOrder + targetSortOrder) / 2);
+                    
+                    // If they're the same or if newSortOrder equals current dragged task sort_order, increment by 1
+                    if (newSortOrder === targetSortOrder || newSortOrder === draggedTask.sort_order) {
+                        newSortOrder = Math.max(targetSortOrder, draggedTask.sort_order) + 1;
+                    }
+                }
+                
+                console.log('Dropping above target, new sort_order:', newSortOrder, 'above:', aboveSortOrder, 'target:', targetSortOrder);
             }
+        } else {
+            // Dropping below target
+            if (targetIndex === sameDateTasks.length - 1) {
+                // Target is last, put dragged task below it
+                newSortOrder = (targetTask.sort_order || 0) - 1;
+                console.log('Target is last, dropping below, new sort_order:', newSortOrder);
+            } else {
+                // Put dragged task between target and the task below it
+                const taskBelow = sameDateTasks[targetIndex + 1];
+                const targetSortOrder = targetTask.sort_order || 0;
+                const belowSortOrder = taskBelow.sort_order || 0;
+                
+                // Always use force ranking for same-date tasks to ensure proper positioning
+                if (true) {
+                    // Force ranking: reassign all sort_order values systematically
+                    isForceRanking = true;
+                    console.log('Performing force ranking for same-date tasks (below)');
+                    
+                    // Get current visual order of all same-date tasks (ascending)
+                    const visualOrder = [...sameDateTasks].sort((a, b) => {
+                        if ((a.sort_order || 0) !== (b.sort_order || 0)) {
+                            return (a.sort_order || 0) - (b.sort_order || 0);
+                        }
+                        // If sort_order is the same, maintain original order
+                        return sameDateTasks.indexOf(a) - sameDateTasks.indexOf(b);
+                    });
+                    
+                    console.log('Current visual order:', visualOrder.map(t => t.id));
+                    
+                    // Find where to insert the dragged task (after the target)
+                    const insertIndex = visualOrder.findIndex(t => t.id === targetId) + 1;
+                    console.log(`Inserting ${draggedId} at position ${insertIndex}`);
+                    
+                    // Reassign sort_order values starting from 0
+                    let sortOrder = 0;
+                    for (let i = 0; i < visualOrder.length; i++) {
+                        if (i === insertIndex) {
+                            // This is where we want to insert the dragged task
+                            newSortOrder = sortOrder;
+                            console.log(`Assigned dragged task ${draggedId} sort_order: ${newSortOrder}`);
+                            sortOrder++; // Increment for next item
+                        }
+                        
+                        if (visualOrder[i].id !== draggedId) {
+                            visualOrder[i].sort_order = sortOrder;
+                            console.log(`Assigned ${visualOrder[i].id} sort_order: ${sortOrder}`);
+                            sortOrder++;
+                        }
+                    }
+                } else {
+                    // Normal case: put between them
+                    newSortOrder = Math.floor((targetSortOrder + belowSortOrder) / 2);
+                    
+                    // If they're the same or if newSortOrder equals current dragged task sort_order, decrement by 1
+                    if (newSortOrder === targetSortOrder || newSortOrder === draggedTask.sort_order) {
+                        newSortOrder = Math.min(targetSortOrder, draggedTask.sort_order) - 1;
+                    }
+                }
+                
+                console.log('Dropping below target, new sort_order:', newSortOrder, 'target:', targetSortOrder, 'below:', belowSortOrder);
+            }
+        }
+        
+        // Additional check: if newSortOrder would create a duplicate, find the next available number
+        const existingSortOrders = sameDateTasks.map(t => t.sort_order || 0);
+        while (existingSortOrders.includes(newSortOrder)) {
+            newSortOrder = dropAbove ? newSortOrder + 1 : newSortOrder - 1;
         }
         
         try {
             // Update in Supabase
+            console.log('Updating task in Supabase:', { id: draggedId, sort_order: newSortOrder });
             const { error } = await this.supabase
                 .from('tasks')
                 .update({ sort_order: newSortOrder })
                 .eq('id', draggedId)
                 .eq('user_id', this.user.id);
             
+            if (error) {
+                console.error('Supabase update error:', error);
+                throw error;
+            }
+            
+            // If we did force ranking, update all affected tasks in Supabase
+            if (isForceRanking) {
+                console.log('Updating all force-ranked tasks in Supabase');
+                const tasksToUpdate = sameDateTasks.filter(t => t.id !== draggedId);
+                
+                for (const task of tasksToUpdate) {
+                    console.log(`Updating ${task.id} with sort_order: ${task.sort_order}`);
+                    const { error: updateError } = await this.supabase
+                        .from('tasks')
+                        .update({ sort_order: task.sort_order })
+                        .eq('id', task.id)
+                        .eq('user_id', this.user.id);
+                    
+                    if (updateError) {
+                        console.error(`Error updating ${task.id}:`, updateError);
+                        throw updateError;
+                    }
+                }
+            } else if (targetTask.sort_order !== (targetTask.sort_order || 0)) {
+                // Single target task update
+                console.log('Updating target task in Supabase:', { id: targetId, sort_order: targetTask.sort_order });
+                const { error: targetError } = await this.supabase
+                    .from('tasks')
+                    .update({ sort_order: targetTask.sort_order })
+                    .eq('id', targetId)
+                    .eq('user_id', this.user.id);
+                
+                if (targetError) {
+                    console.error('Target task Supabase update error:', targetError);
+                    throw targetError;
+                }
+            }
+            
+            console.log('Supabase update successful');
+            draggedTask.sort_order = newSortOrder;
+            
+            console.log('Updated local task sort_order:', draggedTask.sort_order);
+            
+            this.saveTasksToLocal();
+            this.renderTasks();
+            console.log('Tasks re-rendered');
+        } catch (error) {
+            console.error('Error reordering task:', error);
+            // If sort_order column doesn't exist, fall back to updating renewed_at
+            if (error.message && error.message.includes('sort_order')) {
+                console.log('sort_order column not found, falling back to renewed_at update');
+                this.fallbackTaskReorder(draggedId, targetId);
+            } else {
+                alert('Failed to reorder task. Please try again.');
+            }
+        }
+    }
+    
+    async fallbackTaskReorder(draggedId, targetId) {
+        console.log('Using fallback reorder method');
+        const draggedTask = this.tasks.find(t => t.id === draggedId);
+        const targetTask = this.tasks.find(t => t.id === targetId);
+        
+        if (!draggedTask || !targetTask) return;
+        
+        // Update renewal date to be one day before target
+        const targetRenewedAt = new Date(targetTask.renewed_at);
+        const renewalDate = new Date(targetRenewedAt);
+        renewalDate.setDate(renewalDate.getDate() - 1);
+        
+        // If target was created today, set renewal to today
+        const today = new Date();
+        const targetCreatedToday = targetRenewedAt.toDateString() === today.toDateString();
+        
+        const newRenewalDate = targetCreatedToday ? today.toISOString() : renewalDate.toISOString();
+        
+        try {
+            const { error } = await this.supabase
+                .from('tasks')
+                .update({ renewed_at: newRenewalDate })
+                .eq('id', draggedId)
+                .eq('user_id', this.user.id);
+            
             if (error) throw error;
             
-            draggedTask.sort_order = newSortOrder;
+            draggedTask.renewed_at = newRenewalDate;
             
             this.saveTasksToLocal();
             this.renderTasks();
         } catch (error) {
-            console.error('Error reordering task:', error);
+            console.error('Error in fallback reorder:', error);
             alert('Failed to reorder task. Please try again.');
         }
     }
@@ -654,7 +889,8 @@ class TidesOverSand {
                 .from('tasks')
                 .select('*')
                 .eq('user_id', this.user.id)
-                .order('renewed_at', { ascending: false });
+                .order('renewed_at', { ascending: false })
+                .order('sort_order', { ascending: false });
             
             if (error) throw error;
             
@@ -744,11 +980,12 @@ class TidesOverSand {
             const dateDiff = dateB - dateA;
             if (dateDiff !== 0) return dateDiff;
             
-            // If dates are equal, use sort_order as secondary sort
+            // If dates are equal, use sort_order as secondary sort (ascending)
             const sortOrderA = a.sort_order || 0;
             const sortOrderB = b.sort_order || 0;
-            return sortOrderB - sortOrderA;
+            return sortOrderA - sortOrderB;
         });
+        
         
         // Remove expired tasks (5d+ old)
         const validTasks = sortedTasks.filter(task => {
@@ -792,7 +1029,7 @@ class TidesOverSand {
             return;
         }
         
-        taskList.innerHTML = validTasks.map(task => {
+        const htmlContent = validTasks.map(task => {
             // Only apply fade class to non-completed tasks
             const fadeClass = task.completed ? '' : this.getTaskFadeClass(task);
             
@@ -824,6 +1061,8 @@ class TidesOverSand {
                 </div>
             `;
         }).join('');
+        
+        taskList.innerHTML = htmlContent;
     }
     
     escapeHtml(text) {
