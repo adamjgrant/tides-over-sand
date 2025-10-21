@@ -386,6 +386,11 @@ class TidesOverSand {
         
         // Remove from pending deletes
         this.pendingDeletes.delete(taskId);
+        
+        // Hide notification if no more pending deletes
+        if (this.pendingDeletes.size === 0) {
+            this.hideDeleteNotification();
+        }
     }
     
     async renewTask() {
