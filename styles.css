@@ -227,11 +227,28 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
     display: flex;
     align-items: center;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
     user-select: none;
+    line-height: 1.35rem;
+}
+
+.task-item.completed + .task-item.completed {
+  border-top: none;
+}
+
+.task-item.completed {
+  padding: 0.2rem 1.5rem;
+}
+
+.task-item:not(.completed) + .task-item.completed {
+  padding-top: 1.2rem;
+}
+
+.task-item.completed:has(+ .task-item:not(.completed)) {
+  padding-bottom: 1.2rem;
 }
 
 .task-item:hover {
