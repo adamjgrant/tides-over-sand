@@ -618,26 +618,8 @@ class TidesOverSand {
         const task = this.tasks.find(t => t.id === this.currentTaskId);
         if (!task) return;
         
-        // Find the task to renew before
-        const taskIndex = this.tasks.findIndex(t => t.id === this.currentTaskId);
-        const nextTask = this.tasks[taskIndex + 1];
-        
-        let renewalDate;
-        if (nextTask) {
-            // Set renewal date to one day before the next task
-            const nextTaskDate = new Date(nextTask.renewed_at);
-            const renewal = new Date(nextTaskDate);
-            renewal.setDate(renewal.getDate() - 1);
-            
-            // If the next task was created today, set renewal to today
-            const today = new Date();
-            const nextTaskCreatedToday = nextTaskDate.toDateString() === today.toDateString();
-            
-            renewalDate = nextTaskCreatedToday ? today.toISOString() : renewal.toISOString();
-        } else {
-            // Only task in list, renew to today
-            renewalDate = new Date().toISOString();
-        }
+        // Set renewal date to today
+        const renewalDate = new Date().toISOString();
         
         try {
             const { error } = await this.supabase
