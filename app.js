@@ -400,14 +400,8 @@ class TidesOverSand {
         preview.classList.add('active');
         textarea.classList.remove('active');
         
-        // Update lifetime display
+        // Update lifetime display (this also handles renew button visibility)
         this.updateLifetimeDisplay(task);
-        
-        // Show/hide renew button
-        const renewBtn = document.getElementById('detailRenewTaskBtn');
-        const lifetime = this.getTaskLifetime(task);
-        const canRenew = this.canRenewTask(task) && lifetime > 0;
-        renewBtn.style.display = canRenew ? 'inline-block' : 'none';
         
         document.getElementById('taskDetailPanel').classList.add('active');
         
@@ -638,6 +632,10 @@ class TidesOverSand {
             
             this.saveTasksToLocal();
             this.renderTasks();
+            
+            // Update the lifetime display in the detail panel (this will also hide the renew button if needed)
+            this.updateLifetimeDisplay(task);
+            
             // Keep detail panel open after renewal
         } catch (error) {
             console.error('Error renewing task:', error);
@@ -728,6 +726,10 @@ class TidesOverSand {
         const lifetimeElement = document.getElementById('detailLifetimeValue');
         lifetimeElement.textContent = `${lifetime}d`;
         lifetimeElement.className = `lifetime-value ${this.getLifetimeBadgeClass(task)}`;
+        
+        // Hide renew button when lifetime is 0d
+        const renewBtn = document.getElementById('detailRenewTaskBtn');
+        renewBtn.style.display = lifetime > 0 ? 'inline-block' : 'none';
     }
     
     updatePreview() {
