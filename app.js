@@ -705,6 +705,14 @@ class TidesOverSand {
         return Math.min(4, diffDays); // 0d to 4d (5d = deleted)
     }
     
+    getTaskActualAge(task) {
+        // Get the actual age in days without capping (for deletion checks)
+        const renewedAt = new Date(task.renewed_at);
+        const now = new Date();
+        const diffTime = now - renewedAt;
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+    
     getTaskFadeClass(task) {
         const lifetime = this.getTaskLifetime(task);
         if (lifetime >= 4) return 'fade-4'; // 4d = faintest but readable
@@ -1103,7 +1111,25 @@ class TidesOverSand {
             if (error) throw error;
             
             this.tasks = data || [];
-            this.saveTasksToLocal();
+            
+            // Check for and delete expired tasks (5d+ old) immediately on load
+            const expiredTasks = this.tasks.filter(task => {
+                const actualAge = this.getTaskActualAge(task);
+                return actualAge >= 5; // 5 days or older
+            });
+            
+            if (expiredTasks.length > 0) {
+                // Remove expired tasks from local array
+                this.tasks = this.tasks.filter(task => {
+                    const actualAge = this.getTaskActualAge(task);
+                    return actualAge < 5; // Keep only tasks < 5 days old
+                });
+                
+                // Delete expired tasks from Supabase
+                await this.deleteExpiredTasks(expiredTasks);
+                this.saveTasksToLocal();
+            }
+            
             this.renderTasks();
             
             // Set up real-time subscription
@@ -1253,15 +1279,15 @@ class TidesOverSand {
         
         // Remove expired tasks (5d+ old)
         const validTasks = sortedTasks.filter(task => {
-            const lifetime = this.getTaskLifetime(task);
-            return lifetime <= 4; // Keep 0d to 4d, delete 5d+
+            const actualAge = this.getTaskActualAge(task);
+            return actualAge < 5; // Keep tasks < 5 days old
         });
         
         // Update tasks array if any were removed
         if (validTasks.length !== this.tasks.length) {
             const expiredTasks = this.tasks.filter(task => {
-                const lifetime = this.getTaskLifetime(task);
-                return lifetime > 4; // 5d+ old
+                const actualAge = this.getTaskActualAge(task);
+                return actualAge >= 5; // 5d+ old
             });
             
             this.tasks = validTasks;
